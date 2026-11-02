@@ -1,7 +1,12 @@
 import { useEffect, useRef } from 'react';
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
+// MapLibre finds its worker next to its own module file, which breaks once Vite bundles it.
+// Import the worker as an asset so dev and production builds both serve it at a real URL.
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import { rcStepExpression } from '../lib/scales.js';
 import { DISTRICTS, DIR_NAMES } from '../lib/format.js';
+
+maplibregl.setWorkerUrl(workerUrl);
 
 // Dark vector basemap from OpenFreeMap (OpenStreetMap data, no API key). If the style fails
 // to load, the map still works: data layers draw on a plain background color.

@@ -6,6 +6,6 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   base: './',
-  // MapLibre alone is ~800 kB; that is expected for a map app.
-  build: { chunkSizeWarningLimit: 1200 },
+  // MapLibre alone is ~1 MB; that is expected for a map app.
+  build: { chunkSizeWarningLimit: 1400 },
 });
