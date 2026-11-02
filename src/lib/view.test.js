@@ -116,6 +116,11 @@ describe('buildView: storm direction', () => {
       .toMatch(/ 2 of 10 districts are above the regional average\.$/);
   });
 
+  it('uses "is" when exactly one district is above average', () => {
+    expect(buildView(FIXTURE, choices({ dir: 'NE' })).insight)
+      .toMatch(/ 1 of 10 districts is above the regional average\.$/);
+  });
+
   it('describes the selected district, including its worst and mildest direction', () => {
     expect(buildView(FIXTURE, choices()).selected).toMatchObject({
       district: 5,

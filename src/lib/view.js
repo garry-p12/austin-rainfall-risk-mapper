@@ -38,7 +38,7 @@ export function buildView(data, s) {
       + `They hit ${name(top)} hardest (${districts[top].label}) and ${name(low)} least (${districts[low].label}). `
       + (above === 10 ? 'Every district is above the regional average.'
         : above === 0 ? 'Every district is below the regional average.'
-          : `${above} of 10 districts are above the regional average.`);
+          : `${above} of 10 districts ${above === 1 ? 'is' : 'are'} above the regional average.`);
     sentence = `For storms from the ${dirName}, the heaviest rain in ${name(s.sel)} was `
       + (p === 0 ? 'about as intense as' : `${Math.abs(p)}% ${p > 0 ? 'more' : 'less'} intense than`)
       + ` the regional average for the same storm (${sel.value.toFixed(2)}×). Its worst direction is ${DIR_NAMES[byDir[0]]} (${pct(valueAt(s.sel, byDir[0]))}); its mildest is ${DIR_NAMES[byDir[7]]} (${pct(valueAt(s.sel, byDir[7]))}).`;
