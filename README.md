@@ -3,6 +3,8 @@
 An interactive map of where heavy rain hits hardest in Austin, by council district, built from
 Hyojeong Choi's analysis of AORC hourly rainfall (2000–2024) at the TE(x)US Lab, UT Austin.
 
+**Live site:** https://garry-p12.github.io/austin-rainfall-risk-mapper/
+
 Two ways to look at the data:
 
 - **Storm direction.** For storms arriving from each of 8 directions, how intense the heaviest
@@ -10,6 +12,10 @@ Two ways to look at the data:
   Shown per district or per ~1 km grid cell.
 - **Time of day and urban heat.** How often each district was one of the 3 hardest-hit
   districts, for day and night storms under strong, moderate and weak urban heat islands.
+
+Also: when storms from each direction arrive (month and time of day), "Find my district" from
+the browser's location (computed on the page, never sent anywhere), hover values for grid cells,
+and links that open the exact view you are looking at.
 
 ## Run it
 
@@ -29,6 +35,12 @@ Build a static site for hosting (GitHub Pages, a UT server, Netlify, etc.):
 ```bash
 npm run build                     # output in dist/
 ```
+
+## Deploy
+
+Every push to `main` runs `.github/workflows/deploy.yml`: install, `npm test`, `npm run build`,
+then publish `dist/` to GitHub Pages. A failing test stops the deploy. The data in `public/data/`
+is committed, so the workflow needs no Python or raw research files.
 
 ## Update the data
 

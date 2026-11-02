@@ -7,3 +7,5 @@ data/raw/*.npz
 data/raw/*.csv
 data/raw/council_districts.geojson
 .venv/
+# Internal project notes for Claude Code; kept out of the public repo.
+CLAUDE.md
