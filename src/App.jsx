@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useData } from './lib/useData.js';
 import { buildView } from './lib/view.js';
+import { choicesFromSearch, searchFromChoices } from './lib/url.js';
+import CopyLink from './components/CopyLink.jsx';
 import ConditionPanel from './components/ConditionPanel.jsx';
 import RiskMap from './components/RiskMap.jsx';
 import Legend from './components/Legend.jsx';
@@ -13,9 +15,22 @@ const INITIAL = { mode: 'direction', dir: 'S', time: 'Night', uhi: 'Strong', sel
 
 export default function App() {
   const { data, error } = useData();
-  const [choices, setChoices] = useState(INITIAL);
+  // Start from the link the page was opened with, so shared views open as they were sent.
+  const [choices, setChoices] = useState(() => choicesFromSearch(window.location.search, INITIAL));
   const update = (patch) => setChoices((c) => ({ ...c, ...patch }));
   const view = useMemo(() => (data ? buildView(data, choices) : null), [data, choices]);
+  // [longitude, latitude] from "Find my district"; shown on the map, never stored or sent.
+  const [userPoint, setUserPoint] = useState(null);
+  const onLocate = ({ point, district }) => {
+    setUserPoint(point);
+    if (district) update({ sel: district });
+  };
+
+  // Keep the address in step with the choices. replaceState, so Back still leaves the page.
+  useEffect(() => {
+    const { pathname, hash } = window.location;
+    window.history.replaceState(null, '', `${pathname}${searchFromChoices(choices)}${hash}`);
+  }, [choices]);
 
   if (error) {
     return <main className="status" role="alert"><h1>Map data is missing</h1><p>{error.message}</p></main>;
@@ -27,6 +42,7 @@ export default function App() {
       <header className="topbar">
         <h1 className="brand">Austin Rainfall Risk Mapper</h1>
         <p className="tagline">Where heavy rain hits hardest, 2000–2024</p>
+        <CopyLink />
       </header>
 
       <div className="layout">
@@ -41,13 +57,13 @@ export default function App() {
             <ul>{view.howTo.map((t) => <li key={t}>{t}</li>)}</ul>
           </details>
 
-          <RiskMap data={data} view={view} choices={choices} onSelect={(sel) => update({ sel })} />
+          <RiskMap data={data} view={view} choices={choices} userPoint={userPoint} onSelect={(sel) => update({ sel })} />
           <Legend scale={view.scale} {...view.legend} />
           {view.calendar && <StormCalendar calendar={view.calendar} />}
           <ComparisonTable table={view.table} selected={choices.sel} update={update} />
         </main>
 
-        <DistrictPanel view={view} update={update} />
+        <DistrictPanel view={view} update={update} districtShapes={data.districts} onLocate={onLocate} />
       </div>
 
       <footer className="sources">

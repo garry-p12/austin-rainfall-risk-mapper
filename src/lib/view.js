@@ -41,6 +41,10 @@ export function buildCalendar(cal, dir) {
   };
 }
 
+// Tooltip for one ~1 km grid cell on the map (props are the cell's GeoJSON properties).
+export const gridCellTip = (props, dir) =>
+  `${pct(props[`rc_${dir}`])} vs. regional average (cell in District ${props.district})`;
+
 // Everything the screen shows for the current choices, computed in one place.
 // Pure function: (data, choices) -> view. Components only render what it returns.
 export function buildView(data, s) {

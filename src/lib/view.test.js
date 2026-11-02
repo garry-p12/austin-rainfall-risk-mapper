@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { buildView } from './view.js';
+import { buildView, gridCellTip } from './view.js';
 import { RC, TOP3, classify } from './scales.js';
 import { CONDITIONS, DIRECTIONS, DISTRICTS, aboutHours, mph, pct } from './format.js';
 
@@ -244,6 +244,14 @@ describe('buildView: time of day and urban heat', () => {
     const v = buildView(FIXTURE, uhiChoices({ time: 'Night', uhi: 'Moderate' }));
     expect(v.storms).toBe(104);
     expect(v.stormsNote).toMatch(/excluding 2014–2015/);
+  });
+});
+
+describe('gridCellTip', () => {
+  it('shows the cell value for the chosen direction and its district', () => {
+    const props = { district: 5, rc_S: 1.479, rc_N: 0.84 };
+    expect(gridCellTip(props, 'S')).toBe('+48% vs. regional average (cell in District 5)');
+    expect(gridCellTip(props, 'N')).toBe('−16% vs. regional average (cell in District 5)');
   });
 });
 

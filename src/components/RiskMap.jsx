@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as maplibregl from 'maplibre-gl';
 // MapLibre finds its worker next to its own module file, which breaks once Vite bundles it.
 // Import the worker as an asset so dev and production builds both serve it at a real URL.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import { rcStepExpression } from '../lib/scales.js';
 import { DISTRICTS, DIR_NAMES } from '../lib/format.js';
+import { gridCellTip } from '../lib/view.js';
 
 maplibregl.setWorkerUrl(workerUrl);
 
@@ -29,14 +30,19 @@ const TRAVEL_ANGLE = { N: 180, NE: 225, E: 270, SE: 315, S: 0, SW: 45, W: 90, NW
 
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-export default function RiskMap({ data, view, choices, onSelect }) {
+export default function RiskMap({ data, view, choices, userPoint, onSelect }) {
   const container = useRef(null);
   const mapRef = useRef(null);
   const markers = useRef({});
+  const youMarker = useRef(null);
+  const cellPopup = useRef(null);
   const ready = useRef(false);
+  const [loaded, setLoaded] = useState(false);
   const applyRef = useRef(null);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
+  const dirRef = useRef(choices.dir);
+  dirRef.current = choices.dir;
 
   // Create the map once, after the basemap style is fetched (or has failed).
   useEffect(() => {
@@ -78,6 +84,17 @@ export default function RiskMap({ data, view, choices, onSelect }) {
         map.on('mouseenter', 'district-fill', () => { map.getCanvas().style.cursor = 'pointer'; });
         map.on('mouseleave', 'district-fill', () => { map.getCanvas().style.cursor = ''; });
 
+        // Grid mode: hover (or tap) a cell to read its exact value.
+        const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10, maxWidth: 'none', className: 'cell-tip' });
+        cellPopup.current = popup;
+        const showCell = (e) => {
+          const props = e.features?.[0]?.properties;
+          if (props) popup.setLngLat(e.lngLat).setText(gridCellTip(props, dirRef.current)).addTo(map);
+        };
+        map.on('mousemove', 'grid-fill', showCell);
+        map.on('click', 'grid-fill', showCell);
+        map.on('mouseleave', 'grid-fill', () => popup.remove());
+
         // District labels are real buttons, so they work with keyboard and screen readers.
         for (const f of data.labels.features) {
           const d = f.properties.district;
@@ -88,11 +105,19 @@ export default function RiskMap({ data, view, choices, onSelect }) {
           markers.current[d] = { el, marker: new maplibregl.Marker({ element: el }).setLngLat(f.geometry.coordinates).addTo(map) };
         }
         ready.current = true;
+        setLoaded(true);
         applyRef.current?.();
       });
     });
 
-    return () => { cancelled = true; ready.current = false; map?.remove(); mapRef.current = null; };
+    return () => {
+      cancelled = true;
+      ready.current = false;
+      youMarker.current = null;
+      setLoaded(false);
+      map?.remove();
+      mapRef.current = null;
+    };
   }, [data]);
 
   // Restyle whenever the choices change. Cheap: 10 feature-states, one paint property, 10 labels.
@@ -117,14 +142,27 @@ export default function RiskMap({ data, view, choices, onSelect }) {
       map.setPaintProperty('district-fill', 'fill-opacity', grid ? 0 : 0.82);
       map.setPaintProperty('district-line', 'line-color', grid ? 'rgba(18,18,18,0.9)' : '#121212');
       map.setFilter('district-selected', ['==', ['get', 'district'], choices.sel]);
+      if (!grid) cellPopup.current?.remove();
+
+      // "Find my district" marker. Not a button: it only shows where the visitor is.
+      if (userPoint && !youMarker.current) {
+        const el = document.createElement('div');
+        el.className = 'you-are-here';
+        el.setAttribute('role', 'img');
+        el.setAttribute('aria-label', 'Your location');
+        youMarker.current = new maplibregl.Marker({ element: el }).setLngLat(userPoint).addTo(map);
+      } else if (userPoint) {
+        youMarker.current.setLngLat(userPoint);
+      }
     };
     applyRef.current = apply;
     apply();
-  }, [view, choices]);
+  }, [view, choices, userPoint]);
 
   return (
     <div className="map-wrap">
       <div ref={container} className="map" role="region" aria-label="Map of Austin council districts. Use the district buttons on the map or the ranking to select a district." />
+      {!loaded && <div className="map-loading" role="status">Loading map…</div>}
       {view.isDir && (
         <div className="storm-badge" aria-hidden="true">
           <svg width="26" height="26" viewBox="0 0 24 24" style={{ transform: `rotate(${TRAVEL_ANGLE[choices.dir]}deg)`, transition: prefersReducedMotion() ? 'none' : 'transform 250ms ease' }}>
