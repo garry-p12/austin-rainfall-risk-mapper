@@ -51,5 +51,6 @@ src/lib/scales.js          color classes for both measures
 src/components/            ConditionPanel, RiskMap (MapLibre), Legend, ComparisonTable, DistrictPanel
 ```
 
-Basemap: CARTO dark tiles (OpenStreetMap data), no API key needed.
+Basemap: OpenFreeMap "dark" vector style (OpenStreetMap data), no API key needed. CARTO tiles
+were dropped in Nov 2026 because they began requiring an API key.
 This is a research product, not an official flood warning.
