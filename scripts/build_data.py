@@ -5,6 +5,9 @@ Inputs (default: data/raw/):
                                           concentration on the ~1 km AORC grid
   final_event_directions_1792.csv         one row per storm event with its direction
   council_districts*.geojson              City of Austin council district boundaries
+  object_summary.csv                      hourly storm objects per event (tracking output),
+                                          used for when each storm was over the city
+  events_direction.csv                    per-event motion summary (median speed)
   uhi_top3.json (optional)                Top-3 shares by day/night x UHI class
 
 Outputs (default: public/data/):
@@ -12,6 +15,7 @@ Outputs (default: public/data/):
   district_labels.geojson  one point per district, placed well inside it
   direction_districts.json mean relative concentration per district and direction
   direction_grid.geojson   city grid cells with one value per direction
+  direction_calendar.json  per direction: arrival month and hour (Austin time), speed, hours over city
   uhi_top3.json            copied through so the app has one data folder
   meta.json                storm counts, city averages, provenance
 
@@ -46,6 +50,41 @@ def load_districts(path):
         out[int(number)] = shape(feature["geometry"]).buffer(0)  # buffer(0) repairs invalid rings
     if sorted(out) != list(range(1, 11)):
         raise ValueError(f"Expected districts 1-10, found {sorted(out)}")
+    return out
+
+
+def storm_calendar(raw, events):
+    """When storms from each direction reach the city, how fast they move, how long they stay.
+
+    Arrival = first hourly time step at which any of the event's storm objects touches the city.
+    AORC times are UTC; months and hours are converted to Austin local time (CST/CDT).
+    """
+    objs = pd.read_csv(raw / "object_summary.csv", usecols=["event_id", "time", "city_hit"])
+    hit = objs[objs.city_hit.astype(str) == "True"]
+    hit = hit[hit.event_id.isin(events.event_id)]
+    per_event = hit.groupby("event_id").time.agg(first="min", hours="nunique")
+    missing = set(events.event_id) - set(per_event.index)
+    if missing:
+        raise ValueError(f"{len(missing)} events have no city-hit hour in object_summary.csv, e.g. {sorted(missing)[:5]}")
+
+    speed = pd.read_csv(raw / "events_direction.csv", usecols=["event_id", "speed_median_kmh"]).set_index("event_id")
+    df = events.set_index("event_id").join(per_event).join(speed)
+    if df.speed_median_kmh.isna().any():
+        raise ValueError("Some events have no speed in events_direction.csv")
+    local = pd.to_datetime(df["first"]).dt.tz_localize("UTC").dt.tz_convert("America/Chicago")
+    df["month"], df["hour"] = local.dt.month, local.dt.hour
+
+    def summarize(g):
+        return {
+            "n": int(len(g)),
+            "months": [int(x) for x in g.month.value_counts().reindex(range(1, 13), fill_value=0)],
+            "hours": [int(x) for x in g.hour.value_counts().reindex(range(24), fill_value=0)],
+            "speed_kmh_median": round(float(g.speed_median_kmh.median()), 1),
+            "hours_over_city_median": float(g.hours.median()),
+        }
+
+    out = {"timezone": "America/Chicago", "all": summarize(df)}
+    out.update({d: summarize(df[df.final_direction == d]) for d in DIRECTIONS})
     return out
 
 
@@ -121,6 +160,7 @@ def main():
     dump("district_labels.geojson", {"type": "FeatureCollection", "features": label_features})
     dump("direction_districts.json", by_district)
     dump("direction_grid.geojson", {"type": "FeatureCollection", "features": cells})
+    dump("direction_calendar.json", storm_calendar(args.raw, events))
 
     uhi = args.raw / "uhi_top3.json"
     if uhi.exists():

@@ -5,6 +5,7 @@ import ConditionPanel from './components/ConditionPanel.jsx';
 import RiskMap from './components/RiskMap.jsx';
 import Legend from './components/Legend.jsx';
 import ComparisonTable from './components/ComparisonTable.jsx';
+import StormCalendar from './components/StormCalendar.jsx';
 import DistrictPanel from './components/DistrictPanel.jsx';
 
 // Default view: southern storms are the strongest signal in the data (citywide +16%).
@@ -42,6 +43,7 @@ export default function App() {
 
           <RiskMap data={data} view={view} choices={choices} onSelect={(sel) => update({ sel })} />
           <Legend scale={view.scale} {...view.legend} />
+          {view.calendar && <StormCalendar calendar={view.calendar} />}
           <ComparisonTable table={view.table} selected={choices.sel} update={update} />
         </main>
 
@@ -53,7 +55,8 @@ export default function App() {
           Source: Hyojeong Choi, TE(x)US Lab, The University of Texas at Austin. AORC hourly rainfall, 2000–2024.
           Storm direction: {data.meta.total_storms.toLocaleString()} storm events; relative rainfall concentration is the heaviest
           1–6 hour rain compared with the NOAA Atlas 14 1-year storm, scaled so each storm's regional average is 1.0.
-          District values average the ~1 km cells inside each district. Time of day and urban heat: Aug 20, 2026 meeting results
+          District values average the ~1 km cells inside each district. Storm timing and speed: hourly storm tracking of the
+          same events, shown in Austin local time. Time of day and urban heat: Aug 20, 2026 meeting results
           (2014 and 2015 excluded). Boundaries: City of Austin council districts ({data.meta.districts_source}).
           Research product, not an official warning.
         </p>

@@ -1,5 +1,45 @@
 import { RC, TOP3, classify } from './scales.js';
-import { CONDITIONS, DIRECTIONS, DIR_NAMES, DISTRICTS, capitalize, pct, share } from './format.js';
+import { CONDITIONS, DIRECTIONS, DIR_NAMES, DISTRICTS, HOUR_BINS, MONTHS, aboutHours, capitalize, mph, pct, share } from './format.js';
+
+const sum = (xs) => xs.reduce((a, b) => a + b, 0);
+const hourBins = (hours) => HOUR_BINS.map((_, i) => sum(hours.slice(i * 3, i * 3 + 3)));
+const stormCount = (n) => `${n} storm${n === 1 ? '' : 's'}`;
+
+// When storms from one direction reach the city (month and 3-hour window, Austin time).
+// Bar heights share one scale across all directions so switching direction is a fair comparison.
+export function buildCalendar(cal, dir) {
+  const c = cal[dir];
+  const dirName = DIR_NAMES[dir];
+  const maxShare = (counts) => Math.max(...DIRECTIONS.map((d) => Math.max(...counts(cal[d])) / cal[d].n));
+  const bars = (counts, names, max) => {
+    const peak = counts.indexOf(Math.max(...counts));
+    return counts.map((count, i) => {
+      const p = c.n ? count / c.n : 0;
+      return {
+        key: names[i].key, tick: names[i].tick, count, share: p, height: p / max, peak: i === peak,
+        label: `${Math.round(p * 100)}%`,
+        tip: `${names[i].name}: ${stormCount(count)} (${Math.round(p * 100)}%)`,
+      };
+    });
+  };
+  const monthNames = MONTHS.map((m) => ({ key: m, tick: m.slice(0, 3), name: m }));
+  const hourNames = HOUR_BINS.map((b) => ({ key: b.range, tick: b.tick, name: b.range }));
+  const months = bars(c.months, monthNames, maxShare((x) => x.months));
+  const hours = bars(hourBins(c.hours), hourNames, maxShare((x) => hourBins(x.hours)));
+  const peakMonth = MONTHS[months.findIndex((b) => b.peak)];
+  const peakHours = HOUR_BINS[hours.findIndex((b) => b.peak)].between;
+
+  return {
+    title: `When storms from the ${dirName} arrive`,
+    summary: `Storms from the ${dirName} reach Austin most often in ${peakMonth} and between ${peakHours}. `
+      + `A typical one moves at about ${mph(c.speed_kmh_median)} and stays over the city for ${aboutHours(c.hours_over_city_median)}.`,
+    caption: `Share of the ${stormCount(c.n)} from the ${dirName}`,
+    months,
+    hours,
+    note: 'Times are Austin local time. A storm arrives in the first hour it reaches the city. '
+      + 'Typical means half of these storms were faster (or stayed longer) and half slower.',
+  };
+}
 
 // Everything the screen shows for the current choices, computed in one place.
 // Pure function: (data, choices) -> view. Components only render what it returns.
@@ -90,6 +130,7 @@ export function buildView(data, s) {
 
   return {
     isDir, scale, districts, ranked, title, subtitle, insight, howTo, storms, stormsNote,
+    calendar: isDir ? buildCalendar(data.calendar, s.dir) : null,
     selected: { district: s.sel, name: name(s.sel), ...sel, sentence, compareTitle, compare },
     table: {
       title: isDir ? 'Every district, every direction' : 'Every district, every condition',

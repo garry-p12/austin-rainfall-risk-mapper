@@ -6,6 +6,7 @@ const FILES = {
   labels: 'district_labels.geojson',
   direction: 'direction_districts.json',
   grid: 'direction_grid.geojson',
+  calendar: 'direction_calendar.json',
   uhi: 'uhi_top3.json',
 };
 

@@ -76,6 +76,30 @@ legend { font-size: 14px; font-weight: 500; margin-bottom: 10px; }
 .table-section { border-top: 1px solid var(--line); padding-top: 16px; display: flex; flex-direction: column; gap: 6px; }
 .table-section h2 { margin: 0; font-size: 16px; font-weight: 500; }
 .table-scroll { overflow-x: auto; }
+
+.calendar-summary { margin: 0; font-size: 15px; }
+.cal-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px 28px; margin-top: 6px; }
+.cal-chart { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.cal-chart figcaption { font-size: 13px; }
+.cal-chart figcaption strong { font-weight: 500; }
+.cal-bars { display: grid; gap: 2px; border-bottom: 1px solid var(--line-strong); margin-bottom: 18px; }
+.cal-col { position: relative; display: flex; flex-direction: column; min-width: 0; }
+.cal-track { height: 112px; padding-top: 18px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; }
+.cal-fill { position: relative; display: block; flex-shrink: 0; min-height: 1px; background: var(--accent); border-radius: 4px 4px 0 0; }
+/* Outside the flow so the label never squeezes its bar; the track's top padding leaves room. */
+.cal-peak { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); padding-bottom: 2px; font-size: 11px; line-height: 16px; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cal-tick { position: absolute; top: 100%; left: 0; right: 0; padding-top: 4px; font-size: 10px; color: var(--muted); text-align: center; white-space: nowrap; }
+.cal-tip { display: none; position: absolute; bottom: calc(100% - 12px); left: 50%; transform: translateX(-50%); z-index: 2; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--line-strong); background: var(--bg); color: var(--text); font-size: 12px; white-space: nowrap; pointer-events: none; }
+.cal-col:hover .cal-tip { display: block; }
+/* Keep tooltips on the outer bars inside the chart instead of centering them past its edge. */
+.cal-col:nth-child(-n+2) .cal-tip { left: 0; transform: none; }
+.cal-col:nth-last-child(-n+2) .cal-tip { left: auto; right: 0; transform: none; }
+.cal-col:hover .cal-fill { filter: brightness(1.15); }
+.cal-tables { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 8px; }
+.cal-table { border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+.cal-table th, .cal-table td { padding: 3px 10px 3px 0; text-align: right; font-weight: 400; border-bottom: 1px solid var(--line); }
+.cal-table th:first-child { text-align: left; }
+.cal-table thead th { color: var(--muted); }
 .matrix { border-collapse: separate; border-spacing: 4px; width: 100%; min-width: 560px; font-variant-numeric: tabular-nums; }
 .matrix th, .matrix td { padding: 0; text-align: center; font-weight: 400; }
 .matrix button { width: 100%; min-height: 40px; border-radius: 4px; border: 1px solid transparent; background: transparent; cursor: pointer; font-size: 12px; }

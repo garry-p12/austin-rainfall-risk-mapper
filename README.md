@@ -17,7 +17,8 @@ Needs Node 18+ and Python 3.10+.
 
 ```bash
 npm install
-pip install -r requirements.txt   # only needed to rebuild data
+python3 -m venv .venv && source .venv/bin/activate   # only needed to rebuild data
+pip install -r requirements.txt
 npm run data                      # data/raw -> public/data (already built; rerun after new results)
 npm run dev                       # http://localhost:5173
 npm test                          # unit tests for buildView() and the shipped data
@@ -33,9 +34,10 @@ npm run build                     # output in dist/
 
 1. Put Hyojeong's new files in `data/raw/`:
    `directional_relative_concentration.npz` and `final_event_directions_1792.csv`
-   (the script checks that their storm counts agree).
+   (the script checks that their storm counts agree), plus `object_summary.csv` and
+   `events_direction.csv` from her storm tracking (used for the storm calendar).
 2. Optional, for full-detail district boundaries: `python scripts/fetch_districts.py`.
-3. `npm run data`, then reload the app.
+3. `npm run data` (with the `.venv` active), then `npm test`, then reload the app.
 
 `data/raw/uhi_top3.json` holds the day/night × urban heat values. They were transcribed from the
 Aug 20 meeting figure; replace them with her results table when available.
