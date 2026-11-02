@@ -1,0 +1,111 @@
+/* Dark theme modeled on NOAA WPC's Urban Rain Rate Dashboard (URRD). */
+:root {
+  --bg: #121212;
+  --panel: #1A202C;
+  --line: rgba(255, 255, 255, 0.12);
+  --line-strong: rgba(255, 255, 255, 0.23);
+  --text: #E2E8F0;
+  --muted: #A0AEC0;
+  --accent: #90CAF9;
+  --accent-soft: rgba(144, 202, 249, 0.16);
+  --radius: 8px;
+  color-scheme: dark;
+  font-family: Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); line-height: 1.5; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.muted { color: var(--muted); margin: 0; }
+.small { font-size: 12px; }
+.status { padding: 48px; max-width: 640px; }
+
+.topbar { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 20px; padding: 14px 24px; background: var(--panel); border-bottom: 1px solid var(--line); }
+.brand { margin: 0; font-size: 18px; font-weight: 700; }
+.tagline { margin: 0; font-size: 14px; color: var(--muted); }
+
+.layout { display: grid; grid-template-columns: 280px minmax(0, 1fr) 340px; gap: 16px; padding: 16px; align-items: start; }
+@media (max-width: 1180px) { .layout { grid-template-columns: 260px minmax(0, 1fr); } .layout > aside:last-child { grid-column: 1 / -1; } }
+@media (max-width: 760px) { .layout { grid-template-columns: 1fr; } }
+
+.panel { background: var(--panel); border-radius: var(--radius); padding: 20px; }
+.side { display: flex; flex-direction: column; gap: 20px; }
+.center { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+legend { font-size: 14px; font-weight: 500; margin-bottom: 10px; }
+.hint { margin: -6px 0 10px; font-size: 12px; color: var(--muted); }
+.toggles { display: grid; gap: 6px; }
+.toggle { min-height: 44px; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line-strong); background: transparent; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.toggle small { font-size: 11px; opacity: 0.8; }
+.toggle[aria-pressed='true'] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+.toggle:hover { border-color: var(--accent); }
+.compass { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.compass-center { display: grid; place-items: center; color: #DED413; font-size: 18px; }
+.count { padding: 14px; border-radius: 6px; background: var(--bg); display: flex; flex-direction: column; gap: 2px; }
+.count strong { font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.count span { font-size: 13px; color: var(--muted); }
+
+.view-title { margin: 0; font-size: 22px; font-weight: 500; }
+.insight { margin: 0; padding: 12px 14px; border-radius: var(--radius); background: rgba(144, 202, 249, 0.10); border: 1px solid rgba(144, 202, 249, 0.35); }
+.howto { font-size: 13px; color: #CBD5E0; }
+.howto summary { cursor: pointer; color: var(--accent); font-weight: 500; min-height: 28px; }
+.howto ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+
+.map-wrap { position: relative; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.map { height: min(70vh, 640px); min-height: 420px; background: var(--bg); }
+.map-label { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 48px; min-height: 36px; padding: 3px 7px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.3); background: rgba(18, 18, 18, 0.85); color: var(--text); cursor: pointer; font-size: 11px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.map-label strong { font-size: 12px; }
+.map-label[aria-pressed='true'] { background: var(--accent); color: #121212; border: 2px solid #FFFFFF; }
+.storm-badge { position: absolute; left: 10px; top: 10px; display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line); font-size: 12px; line-height: 1.3; pointer-events: none; }
+.maplibregl-ctrl-group { background: var(--panel) !important; }
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: invert(1); }
+.maplibregl-ctrl-attrib { background: rgba(18, 18, 18, 0.7) !important; color: var(--muted); }
+.maplibregl-ctrl-attrib a { color: var(--muted); }
+
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: 13px; }
+.legend-title { font-weight: 500; }
+.legend ul { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 0; padding: 0; list-style: none; }
+.legend li { display: inline-flex; align-items: center; gap: 6px; }
+.swatch { width: 18px; height: 18px; border-radius: 4px; display: inline-block; }
+.legend p { flex-basis: 100%; }
+
+.table-section { border-top: 1px solid var(--line); padding-top: 16px; display: flex; flex-direction: column; gap: 6px; }
+.table-section h2 { margin: 0; font-size: 16px; font-weight: 500; }
+.table-scroll { overflow-x: auto; }
+.matrix { border-collapse: separate; border-spacing: 4px; width: 100%; min-width: 560px; font-variant-numeric: tabular-nums; }
+.matrix th, .matrix td { padding: 0; text-align: center; font-weight: 400; }
+.matrix button { width: 100%; min-height: 40px; border-radius: 4px; border: 1px solid transparent; background: transparent; cursor: pointer; font-size: 12px; }
+.matrix thead button { display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 500; }
+.matrix thead small { font-size: 10px; color: var(--muted); font-weight: 400; }
+.matrix th button[aria-pressed='true'] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.matrix tbody th button { text-align: left; padding-left: 8px; font-weight: 500; }
+.matrix .cell { font-weight: 500; border: 2px solid transparent; }
+.matrix .row-active .cell { border-color: rgba(255, 255, 255, 0.35); }
+.matrix .cell.active { border-color: #FFFFFF; }
+.matrix tfoot th { font-size: 12px; color: var(--muted); text-align: left; padding-left: 8px; }
+.city-avg { font-size: 12px; border: 1px dashed var(--line-strong); border-radius: 4px; height: 40px; }
+
+.eyebrow { margin: 0; font-size: 13px; color: var(--muted); }
+.district-name { margin: -14px 0 0; font-size: 26px; font-weight: 500; }
+.chip { align-self: flex-start; margin-top: -10px; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 500; }
+.sentence { margin: 0; font-size: 15px; }
+.side h3 { margin: 0 0 -10px; font-size: 14px; font-weight: 500; }
+.compare { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.compare-cell { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 48px; border-radius: 6px; font-variant-numeric: tabular-nums; text-align: center; padding: 2px; }
+.compare-cell small { font-size: 10px; }
+.compare-cell strong { font-size: 13px; font-weight: 500; }
+.compare-cell.active { outline: 2px solid #FFFFFF; outline-offset: 1px; }
+.ranking { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.ranking button { width: 100%; min-height: 32px; display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 6px; border: 1px solid transparent; background: transparent; cursor: pointer; }
+.ranking button[aria-pressed='true'] { border-color: var(--accent); background: var(--accent-soft); }
+.rank-id { width: 34px; text-align: left; font-size: 12px; font-weight: 500; }
+.bar { flex: 1; height: 12px; border-radius: 3px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.bar span { display: block; height: 100%; border-radius: 3px; }
+.rank-val { width: 52px; text-align: right; font-size: 12px; font-variant-numeric: tabular-nums; }
+
+.sources { padding: 0 24px 20px; font-size: 12px; color: var(--muted); max-width: 1200px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

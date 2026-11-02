@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.DS_Store
+__pycache__/
+# Research inputs: keep them out of a public repo unless the lab agrees to publish them.
+data/raw/*.npz
+data/raw/*.csv
+data/raw/council_districts.geojson

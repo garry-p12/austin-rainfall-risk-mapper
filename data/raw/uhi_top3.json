@@ -1,0 +1,12 @@
+{
+  "source": "Hyojeong Choi, Aug 20 research meeting: Council District Top-3 Risk by Day/Night and UHI Class. Values transcribed from the figure; 2014-2015 excluded. Replace with the results table when available.",
+  "measure": "Percent of storms in which the district was one of the 3 districts with the most rain",
+  "conditions": {
+    "Day|Strong":     {"n": 269, "values": {"1": 27.9, "2": 34.2, "3": 27.5, "4": 23.4, "5": 34.6, "6": 37.2, "7": 33.1, "8": 31.2, "9": 19.0, "10": 32.0}},
+    "Day|Moderate":   {"n": 260, "values": {"1": 30.4, "2": 36.9, "3": 24.2, "4": 23.5, "5": 31.5, "6": 31.9, "7": 36.9, "8": 30.4, "9": 23.8, "10": 30.4}},
+    "Day|Weak":       {"n": 239, "values": {"1": 33.5, "2": 34.3, "3": 28.9, "4": 26.4, "5": 31.8, "6": 32.2, "7": 33.9, "8": 33.9, "9": 19.7, "10": 25.5}},
+    "Night|Strong":   {"n": 176, "values": {"1": 22.2, "2": 29.5, "3": 24.4, "4": 19.9, "5": 36.4, "6": 36.9, "7": 34.7, "8": 35.2, "9": 19.9, "10": 40.9}},
+    "Night|Moderate": {"n": 184, "values": {"1": 31.5, "2": 33.7, "3": 32.6, "4": 18.5, "5": 31.5, "6": 34.8, "7": 31.0, "8": 31.0, "9": 21.2, "10": 34.2}},
+    "Night|Weak":     {"n": 228, "values": {"1": 27.2, "2": 34.6, "3": 23.7, "4": 22.8, "5": 32.5, "6": 39.9, "7": 32.0, "8": 32.9, "9": 17.5, "10": 36.8}}
+  }
+}
