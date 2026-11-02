@@ -20,6 +20,7 @@ npm install
 pip install -r requirements.txt   # only needed to rebuild data
 npm run data                      # data/raw -> public/data (already built; rerun after new results)
 npm run dev                       # http://localhost:5173
+npm test                          # unit tests for buildView() and the shipped data
 ```
 
 Build a static site for hosting (GitHub Pages, a UT server, Netlify, etc.):
@@ -47,6 +48,7 @@ scripts/fetch_districts.py download detailed council district boundaries
 data/raw/                  research inputs (not committed; see .gitignore)
 public/data/               files the app loads
 src/lib/view.js            all numbers and wording for the current selection (pure function)
+src/lib/view.test.js       Vitest tests: small fixture + every choice on the shipped data
 src/lib/scales.js          color classes for both measures
 src/components/            ConditionPanel, RiskMap (MapLibre), Legend, ComparisonTable, DistrictPanel
 ```
