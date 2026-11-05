@@ -11,13 +11,17 @@ import StormCalendar from './components/StormCalendar.jsx';
 import DistrictPanel from './components/DistrictPanel.jsx';
 
 // Default view: southern storms are the strongest signal in the data (citywide +16%).
-const INITIAL = { mode: 'direction', dir: 'S', time: 'Night', uhi: 'Strong', sel: 5, unit: 'districts' };
+const INITIAL = { mode: 'direction', dir: 'S', time: 'Night', uhi: 'Strong', sel: 5, unit: 'districts', day: 1 };
 
 export default function App() {
   const { data, error } = useData();
   // Start from the link the page was opened with, so shared views open as they were sent.
   const [choices, setChoices] = useState(() => choicesFromSearch(window.location.search, INITIAL));
   const update = (patch) => setChoices((c) => ({ ...c, ...patch }));
+  // A forecast link opened without a forecast file falls back to the storm direction view.
+  useEffect(() => {
+    if (data && !data.forecast && choices.mode === 'forecast') update({ mode: 'direction' });
+  }, [data, choices.mode]);
   const view = useMemo(() => (data ? buildView(data, choices) : null), [data, choices]);
   // [longitude, latitude] from "Find my district"; shown on the map, never stored or sent.
   const [userPoint, setUserPoint] = useState(null);
@@ -41,16 +45,21 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <h1 className="brand">Austin Rainfall Risk Mapper</h1>
-        <p className="tagline">Where heavy rain hits hardest, 2000–2024</p>
+        <p className="tagline">{view.isForecast ? 'Sample rain forecast by district (prototype)' : 'Where heavy rain hits hardest, 2000–2024'}</p>
         <CopyLink />
       </header>
 
       <div className="layout">
-        <ConditionPanel choices={choices} update={update} view={view} />
+        <ConditionPanel choices={choices} update={update} view={view} hasForecast={Boolean(data.forecast)} />
 
         <main className="panel center" aria-labelledby="view-title">
           <h2 id="view-title" className="view-title">{view.title}</h2>
           <p className="muted">{view.subtitle} Select a district to see details.</p>
+          {view.forecast && (
+            <p className="forecast-banner" role="note">
+              {view.forecast.banner} Official forecasts: <a href="https://www.weather.gov/ewx/" target="_blank" rel="noreferrer">National Weather Service Austin/San Antonio</a>.
+            </p>
+          )}
           <p className="insight" aria-live="polite">{view.insight}</p>
           <details className="howto">
             <summary>How to read this map</summary>

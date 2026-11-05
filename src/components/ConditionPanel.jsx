@@ -14,14 +14,15 @@ function Toggle({ options, value, onChange, columns }) {
   );
 }
 
-export default function ConditionPanel({ choices, update, view }) {
+export default function ConditionPanel({ choices, update, view, hasForecast }) {
   const isDir = choices.mode === 'direction';
+  const modes = [{ value: 'direction', label: 'Storm direction' }, { value: 'uhi', label: 'Time of day and urban heat' }];
+  if (hasForecast) modes.push({ value: 'forecast', label: 'Rain forecast', sub: 'Prototype' });
   return (
     <aside className="panel side" aria-label="Storm conditions">
       <fieldset>
-        <legend>Group storms by</legend>
-        <Toggle columns={1} value={choices.mode} onChange={(mode) => update({ mode })}
-          options={[{ value: 'direction', label: 'Storm direction' }, { value: 'uhi', label: 'Time of day and urban heat' }]} />
+        <legend>{hasForecast ? 'Show' : 'Group storms by'}</legend>
+        <Toggle columns={1} value={choices.mode} onChange={(mode) => update({ mode })} options={modes} />
       </fieldset>
 
       {isDir ? (
@@ -41,6 +42,12 @@ export default function ConditionPanel({ choices, update, view }) {
               options={[{ value: 'districts', label: 'Districts' }, { value: 'grid', label: '1 km grid' }]} />
           </fieldset>
         </>
+      ) : view.forecast ? (
+        <fieldset>
+          <legend>Forecast day</legend>
+          <Toggle value={view.forecast.days.find((d) => d.value === choices.day) ? choices.day : view.forecast.days[0].value}
+            onChange={(day) => update({ day })} options={view.forecast.days} />
+        </fieldset>
       ) : (
         <>
           <fieldset>
@@ -57,10 +64,16 @@ export default function ConditionPanel({ choices, update, view }) {
         </>
       )}
 
-      <div className="count">
-        <strong>{view.storms.toLocaleString()} storms</strong>
-        <span>{view.stormsNote}</span>
-      </div>
+      {view.forecast ? (
+        <div className="count">
+          <span>{view.forecast.issued}</span>
+        </div>
+      ) : (
+        <div className="count">
+          <strong>{view.storms.toLocaleString()} storms</strong>
+          <span>{view.stormsNote}</span>
+        </div>
+      )}
     </aside>
   );
 }

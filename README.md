@@ -54,6 +54,20 @@ is committed, so the workflow needs no Python or raw research files.
 `data/raw/uhi_top3.json` holds the day/night × urban heat values. They were transcribed from the
 Aug 20 meeting figure; replace them with her results table when available.
 
+## Forecast prototype (branch `forecast-prototype`, not deployed)
+
+A third view, "Rain forecast", shows ChangJae's RRFS severity per district for forecast days 1–3:
+the heaviest 24-hour rain forecast in the district divided by the NOAA Atlas 14 1-year, 24-hour
+depth (1.00× = a 1-year storm). It uses one sample run (issued 2026-10-01 00 UTC) and says so on
+the page. The view appears only when `public/data/forecast.json` exists.
+
+```bash
+npm run forecast -- data/raw/rrfs_district_severity_2026100100.geojson   # -> public/data/forecast.json
+```
+
+Open questions before it can go live: how often runs arrive and from where, whether day 1 starts at
+the issue time (assumed), and sign-off to publish a forecast.
+
 ## Project layout
 
 ```

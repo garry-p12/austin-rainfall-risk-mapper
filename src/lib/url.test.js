@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { choicesFromSearch, searchFromChoices } from './url.js';
 
-const DEFAULTS = { mode: 'direction', dir: 'S', time: 'Night', uhi: 'Strong', sel: 5, unit: 'districts' };
+const DEFAULTS = { mode: 'direction', dir: 'S', time: 'Night', uhi: 'Strong', sel: 5, unit: 'districts', day: 1 };
 
 describe('searchFromChoices', () => {
   it('writes only the storm direction parameters in that view', () => {
@@ -12,6 +12,10 @@ describe('searchFromChoices', () => {
   it('writes only the time of day and heat parameters in that view, in lower case', () => {
     expect(searchFromChoices({ ...DEFAULTS, mode: 'uhi', time: 'Day', uhi: 'Moderate', sel: 10 }))
       .toBe('?view=uhi&time=day&heat=moderate&district=10');
+  });
+
+  it('writes only the day in the forecast view', () => {
+    expect(searchFromChoices({ ...DEFAULTS, mode: 'forecast', day: 2, sel: 8 })).toBe('?view=forecast&day=2&district=8');
   });
 });
 
@@ -24,6 +28,7 @@ describe('choicesFromSearch', () => {
     const cases = [
       { ...DEFAULTS, dir: 'NW', unit: 'grid', sel: 9 },
       { ...DEFAULTS, mode: 'uhi', time: 'Day', uhi: 'Weak', sel: 1 },
+      { ...DEFAULTS, mode: 'forecast', day: 3, sel: 10 },
     ];
     for (const c of cases) {
       const back = choicesFromSearch(searchFromChoices(c), DEFAULTS);
@@ -39,10 +44,12 @@ describe('choicesFromSearch', () => {
   });
 
   it('falls back to the default for anything it does not recognize', () => {
-    expect(choicesFromSearch('?view=forecast&dir=up&unit=miles&time=noon&heat=extreme&district=11', DEFAULTS)).toEqual(DEFAULTS);
+    expect(choicesFromSearch('?view=radar&dir=up&unit=miles&time=noon&heat=extreme&district=11&day=0', DEFAULTS)).toEqual(DEFAULTS);
     expect(choicesFromSearch('?district=0', DEFAULTS).sel).toBe(5);
     expect(choicesFromSearch('?district=2.5', DEFAULTS).sel).toBe(5);
     expect(choicesFromSearch('?district=abc', DEFAULTS).sel).toBe(5);
+    expect(choicesFromSearch('?view=forecast&day=1.5', DEFAULTS).day).toBe(1);
+    expect(choicesFromSearch('?view=forecast&day=x', DEFAULTS).day).toBe(1);
   });
 
   it('keeps settings for the other view at their defaults', () => {
