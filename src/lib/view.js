@@ -94,15 +94,6 @@ export function buildStormRisk(st, s) {
   const cityValue = districts[top].value;
   const cityCls = classify(SEV, cityValue);
 
-  const columns = days.map((d) => ({ key: String(d.day), head: dayName(d), sub: daysOut(d.day), active: d === day, set: { day: d.day } }));
-  const rows = DISTRICTS.map((d) => ({
-    district: d,
-    cells: columns.map((col, k) => {
-      const v = valueAt(d, k);
-      return { key: col.key, value: v, label: times(v), cls: classify(SEV, v), set: col.set };
-    }),
-  }));
-
   return {
     isDir: false, isStorm: true, scale: SEV, districts, ranked, barMax: 2, unit, units: UNITS.storm,
     city: {
@@ -138,11 +129,6 @@ export function buildStormRisk(st, s) {
         + `Its highest-risk day in this storm is ${dayName(worst.d)} (${times(worst.v)}).`,
       compareTitle: `${name(s.sel)}, day by day`,
       compare: selDays.map(({ d, v }) => ({ key: String(d.day), label: `${dayName(d)}, ${daysOut(d.day)}`, value: times(v), cls: classify(SEV, v), active: d === day })),
-    },
-    table: {
-      title: 'Every district, every day of the storm',
-      note: 'Rain expected compared with a 1-year storm. Select a cell to show it on the map.',
-      columns, rows, footer: null,
     },
     legend: {
       title: 'Rain expected compared with a 1-year storm',
@@ -198,7 +184,7 @@ export function buildView(data, s) {
     howTo = [
       'Each storm is compared with itself: a district at +20% got rain 20% more intense than the average across the Austin region during the same storm.',
       'Intensity is the heaviest 1 to 6 hour rainfall, measured against the 1-year storm from NOAA Atlas 14 (rain Austin sees about once a year).',
-      'Use the table to see which direction is worst for each district. Select any cell to show it on the map.',
+      'The panel on the right shows how the selected district does in every direction.',
     ];
     storms = n;
     stormsNote = `hit the city from this direction, out of ${data.meta.total_storms.toLocaleString()} storms (2000–2024)`;
@@ -245,29 +231,10 @@ export function buildView(data, s) {
     grid: 'Each square is one ~1 km grid cell inside the city.',
   };
 
-  // Comparison table: rows = districts, columns = directions or conditions.
-  const columns = isDir
-    ? DIRECTIONS.map((d) => ({ key: d, head: d, sub: `${data.meta.storm_counts[d]} storms`, active: d === s.dir, set: { dir: d } }))
-    : CONDITIONS.map(([t, u]) => ({ key: `${t}|${u}`, head: t, sub: `${u} heat`, active: t === s.time && u === s.uhi, set: { time: t, uhi: u } }));
-  const rows = DISTRICTS.map((d) => ({
-    district: d,
-    cells: columns.map((col) => {
-      const v = valueAt(d, col.key);
-      return { key: col.key, value: v, label: fmt(v), cls: classify(scale, v), set: col.set };
-    }),
-  }));
-  const footer = isDir ? DIRECTIONS.map((d) => ({ key: d, label: pct(data.meta.city_average[d]) })) : null;
-
   return {
     isDir, isStorm: false, scale, districts, ranked, barMax: isDir ? 1.4 : 45, unit, units: isDir ? UNITS.direction.filter((u) => u.value !== 'watersheds' || data.watersheds) : UNITS.uhi, city, title, subtitle, insight, howTo, storms, stormsNote,
     calendar: isDir ? buildCalendar(data.calendar, s.dir) : null,
     selected: { district: s.sel, name: name(s.sel), ...sel, sentence, compareTitle, compare },
-    table: {
-      title: isDir ? 'Every district, every direction' : 'Every district, every condition',
-      note: isDir ? 'Rain intensity compared with the regional average. Select a cell to show it on the map.'
-        : 'Share of storms where the district was top 3. Select a cell to show it on the map.',
-      columns, rows, footer,
-    },
     legend: {
       title: isDir ? 'Compared with the regional average' : 'Share of storms where the district was top 3',
       note: isDir ? unitNote[unit] : 'If rain fell evenly, every district would be top 3 in 30% of storms.',

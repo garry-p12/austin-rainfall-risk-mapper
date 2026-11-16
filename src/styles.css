@@ -83,9 +83,9 @@ legend { font-size: 14px; font-weight: 500; margin-bottom: 10px; }
 .swatch { width: 18px; height: 18px; border-radius: 4px; display: inline-block; }
 .legend p { flex-basis: 100%; }
 
+/* A titled section below the map (the storm calendar). */
 .table-section { border-top: 1px solid var(--line); padding-top: 16px; display: flex; flex-direction: column; gap: 6px; }
 .table-section h2 { margin: 0; font-size: 16px; font-weight: 500; }
-.table-scroll { overflow-x: auto; }
 
 .calendar-summary { margin: 0; font-size: 15px; }
 .cal-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px 28px; margin-top: 6px; }
@@ -110,18 +110,6 @@ legend { font-size: 14px; font-weight: 500; margin-bottom: 10px; }
 .cal-table th, .cal-table td { padding: 3px 10px 3px 0; text-align: right; font-weight: 400; border-bottom: 1px solid var(--line); }
 .cal-table th:first-child { text-align: left; }
 .cal-table thead th { color: var(--muted); }
-.matrix { border-collapse: separate; border-spacing: 4px; width: 100%; min-width: 560px; font-variant-numeric: tabular-nums; }
-.matrix th, .matrix td { padding: 0; text-align: center; font-weight: 400; }
-.matrix button { width: 100%; min-height: 40px; border-radius: 4px; border: 1px solid transparent; background: transparent; cursor: pointer; font-size: 12px; }
-.matrix thead button { display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 500; }
-.matrix thead small { font-size: 10px; color: var(--muted); font-weight: 400; }
-.matrix th button[aria-pressed='true'] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
-.matrix tbody th button { text-align: left; padding-left: 8px; font-weight: 500; }
-.matrix .cell { font-weight: 500; border: 2px solid transparent; }
-.matrix .row-active .cell { border-color: rgba(255, 255, 255, 0.35); }
-.matrix .cell.active { border-color: #FFFFFF; }
-.matrix tfoot th { font-size: 12px; color: var(--muted); text-align: left; padding-left: 8px; }
-.city-avg { font-size: 12px; border: 1px dashed var(--line-strong); border-radius: 4px; height: 40px; }
 
 .locate { display: flex; flex-direction: column; gap: 6px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
 .locate .hint { margin: 0; }

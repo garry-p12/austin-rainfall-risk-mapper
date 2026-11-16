@@ -167,17 +167,6 @@ describe('buildView: storm direction', () => {
     expect(compare.find((c) => c.key === 'N')).toMatchObject({ label: 'From N', value: '−10%' });
   });
 
-  it('builds the comparison table with storm counts and the city average footer', () => {
-    const { table } = buildView(FIXTURE, choices());
-    expect(table.title).toBe('Every district, every direction');
-    expect(table.columns).toHaveLength(8);
-    expect(table.columns.find((c) => c.key === 'S')).toMatchObject({ head: 'S', sub: '50 storms', active: true, set: { dir: 'S' } });
-    expect(table.columns.filter((c) => c.active)).toHaveLength(1);
-    expect(table.rows.map((r) => r.district)).toEqual(DISTRICTS);
-    expect(table.rows[4].cells.find((c) => c.key === 'S')).toMatchObject({ value: 1.4, label: '+40%', set: { dir: 'S' } });
-    expect(table.footer.find((f) => f.key === 'S').label).toBe('+16%');
-  });
-
   it('reports the storm count for the chosen direction', () => {
     const v = buildView(FIXTURE, choices());
     expect(v.storms).toBe(50);
@@ -230,14 +219,6 @@ describe('buildView: time of day and urban heat', () => {
     expect(compare.map((c) => c.key)).toEqual(CONDITIONS.map(([t, u]) => `${t}|${u}`));
     expect(compare[0]).toMatchObject({ label: 'Day, strong heat', value: '37.2%', active: true });
     expect(compare.filter((c) => c.active)).toHaveLength(1);
-  });
-
-  it('builds a six-column table with no footer', () => {
-    const { table } = buildView(FIXTURE, uhiChoices());
-    expect(table.title).toBe('Every district, every condition');
-    expect(table.columns).toHaveLength(6);
-    expect(table.columns[0]).toMatchObject({ head: 'Day', sub: 'Strong heat', active: true, set: { time: 'Day', uhi: 'Strong' } });
-    expect(table.footer).toBeNull();
   });
 
   it('reports the storm count for the chosen condition', () => {
@@ -386,13 +367,11 @@ describe('buildView: storm risk', () => {
     expect(v.selected.compare.map((c) => c.active)).toEqual([true, false, false]);
   });
 
-  it('builds a districts by days table and says it is an example, not a warning', () => {
+  it('lists the days and says it is an example, not a warning', () => {
     const v = buildView(WITH_STORM, stChoices({ day: 3 }));
-    expect(v.table.columns.map((c) => [c.head, c.sub, c.active])).toEqual([['Oct 1', '1 day out', false], ['Oct 2', '2 days out', false], ['Oct 3', '3 days out', true]]);
-    expect(v.table.rows[2].cells[2]).toMatchObject({ label: '1.60×', set: { day: 3 } });
-    expect(v.table.footer).toBeNull();
     expect(v.storm.banner).toBe('Example storm, assessed Sep 30, 2026, 7 PM (Austin time). This example is not updated and is not an official warning.');
     expect(v.storm.days.map((d) => [d.label, d.sub])).toEqual([['Oct 1', '1 day out'], ['Oct 2', '2 days out'], ['Oct 3', '3 days out']]);
+    expect(v.selected.compare.find((c) => c.active)).toMatchObject({ key: '3', value: '0.25×' });
     expect(v.calendar).toBeNull();
   });
 

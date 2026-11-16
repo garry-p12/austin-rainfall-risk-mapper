@@ -6,7 +6,6 @@ import CopyLink from './components/CopyLink.jsx';
 import ConditionPanel from './components/ConditionPanel.jsx';
 import RiskMap from './components/RiskMap.jsx';
 import Legend from './components/Legend.jsx';
-import ComparisonTable from './components/ComparisonTable.jsx';
 import StormCalendar from './components/StormCalendar.jsx';
 import DistrictPanel from './components/DistrictPanel.jsx';
 
@@ -69,7 +68,6 @@ export default function App() {
           <RiskMap data={data} view={view} choices={choices} userPoint={userPoint} onSelect={(sel) => update({ sel })} />
           <Legend scale={view.scale} {...view.legend} />
           {view.calendar && <StormCalendar calendar={view.calendar} />}
-          <ComparisonTable table={view.table} selected={choices.sel} update={update} />
         </main>
 
         <DistrictPanel view={view} update={update} districtShapes={data.districts} onLocate={onLocate} />
