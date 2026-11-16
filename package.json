@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "data": "python scripts/build_data.py",
-    "forecast": "python scripts/build_forecast.py",
+    "storm": "python scripts/build_storm_risk.py",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",

@@ -9,8 +9,8 @@ const FILES = {
   calendar: 'direction_calendar.json',
   uhi: 'uhi_top3.json',
 };
-// Files the app can run without. With no forecast file, the forecast view is hidden.
-const OPTIONAL = { forecast: 'forecast.json' };
+// Files the app can run without. With no storm risk file, the storm risk view is hidden.
+const OPTIONAL = { storm: 'storm_risk.json' };
 
 // Load every data file once. Files live in public/data and are produced by
 // scripts/build_data.py, so the app never needs to know about the raw research outputs.

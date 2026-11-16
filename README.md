@@ -13,7 +13,7 @@ Two ways to look at the data:
 - **Time of day and urban heat.** How often each district was one of the 3 hardest-hit
   districts, for day and night storms under strong, moderate and weak urban heat islands.
 
-Also: when storms from each direction arrive (month and time of day), "Find my district" from
+Also: risk for an upcoming storm by district (one example storm), when storms from each direction arrive (month and time of day), "Find my district" from
 the browser's location (computed on the page, never sent anywhere), hover values for grid cells,
 and links that open the exact view you are looking at.
 
@@ -54,19 +54,22 @@ is committed, so the workflow needs no Python or raw research files.
 `data/raw/uhi_top3.json` holds the day/night × urban heat values. They were transcribed from the
 Aug 20 meeting figure; replace them with her results table when available.
 
-## Forecast prototype (branch `forecast-prototype`, not deployed)
+## Upcoming storm risk (example storm)
 
-A third view, "Rain forecast", shows ChangJae's RRFS severity per district for forecast days 1–3:
-the heaviest 24-hour rain forecast in the district divided by the NOAA Atlas 14 1-year, 24-hour
-depth (1.00× = a 1-year storm). It uses one sample run (issued 2026-10-01 00 UTC) and says so on
-the page. The view appears only when `public/data/forecast.json` exists.
+A third view gives the risk for each district on each day of one upcoming storm, measured against
+history: the heaviest 24-hour rain the RRFS weather model expects in the district (wettest ~3 km
+grid cell) divided by the NOAA Atlas 14 1-year, 24-hour depth (1.00× = rain Austin sees about once a
+year). Values come from ChangJae's district severity file. Day N is assessed N days out, so the
+assessment gets better as the storm gets closer. The site shows one example storm (assessed
+2026-09-30 7 PM Austin time) and says it is not updated and not an official warning. The view
+appears only when `public/data/storm_risk.json` exists.
 
 ```bash
-npm run forecast -- data/raw/rrfs_district_severity_2026100100.geojson   # -> public/data/forecast.json
+npm run storm -- data/raw/rrfs_district_severity_2026100100.geojson   # -> public/data/storm_risk.json
 ```
 
-Open questions before it can go live: how often runs arrive and from where, whether day 1 starts at
-the issue time (assumed), and sign-off to publish a forecast.
+Still open with ChangJae: a regular feed of new assessments, whether day 1 starts at the
+assessment time (assumed), direction and timing scenarios for 1 day out, and watershed values.
 
 ## Project layout
 

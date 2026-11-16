@@ -14,14 +14,14 @@ function Toggle({ options, value, onChange, columns }) {
   );
 }
 
-export default function ConditionPanel({ choices, update, view, hasForecast }) {
+export default function ConditionPanel({ choices, update, view, hasStorm }) {
   const isDir = choices.mode === 'direction';
   const modes = [{ value: 'direction', label: 'Storm direction' }, { value: 'uhi', label: 'Time of day and urban heat' }];
-  if (hasForecast) modes.push({ value: 'forecast', label: 'Rain forecast', sub: 'Prototype' });
+  if (hasStorm) modes.push({ value: 'storm', label: 'Upcoming storm risk', sub: 'Example storm' });
   return (
     <aside className="panel side" aria-label="Storm conditions">
       <fieldset>
-        <legend>{hasForecast ? 'Show' : 'Group storms by'}</legend>
+        <legend>{hasStorm ? 'Show' : 'Group storms by'}</legend>
         <Toggle columns={1} value={choices.mode} onChange={(mode) => update({ mode })} options={modes} />
       </fieldset>
 
@@ -42,11 +42,11 @@ export default function ConditionPanel({ choices, update, view, hasForecast }) {
               options={[{ value: 'districts', label: 'Districts' }, { value: 'grid', label: '1 km grid' }]} />
           </fieldset>
         </>
-      ) : view.forecast ? (
+      ) : view.storm ? (
         <fieldset>
-          <legend>Forecast day</legend>
-          <Toggle value={view.forecast.days.find((d) => d.value === choices.day) ? choices.day : view.forecast.days[0].value}
-            onChange={(day) => update({ day })} options={view.forecast.days} />
+          <legend>Day of the storm</legend>
+          <Toggle value={view.storm.days.find((d) => d.value === choices.day) ? choices.day : view.storm.days[0].value}
+            onChange={(day) => update({ day })} options={view.storm.days} />
         </fieldset>
       ) : (
         <>
@@ -64,9 +64,9 @@ export default function ConditionPanel({ choices, update, view, hasForecast }) {
         </>
       )}
 
-      {view.forecast ? (
+      {view.storm ? (
         <div className="count">
-          <span>{view.forecast.issued}</span>
+          <span>{view.storm.assessed}</span>
         </div>
       ) : (
         <div className="count">

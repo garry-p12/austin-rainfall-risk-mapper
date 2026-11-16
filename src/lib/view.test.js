@@ -323,9 +323,9 @@ describe('buildView: storm calendar', () => {
   });
 });
 
-// Forecast fixture: 3 days from a 00 UTC run (7 PM the day before in Austin, daylight time).
+// Storm risk fixture: 3 days assessed by a 00 UTC run (7 PM the day before in Austin, daylight time).
 // Day 1: all 0.2 except D1 0.5. Day 2: D10 1.31 and D8 1.0 reach a 1-year storm. Day 3: D3 1.6 only.
-const FORECAST = deepFreeze({
+const STORM = deepFreeze({
   model: 'RRFS',
   issue_time: '2026-10-01T00:00:00Z',
   accumulation_hours: 24,
@@ -340,11 +340,11 @@ const FORECAST = deepFreeze({
     d === 3 ? 1.6 : 0.25,
   ]])),
 });
-const WITH_FORECAST = { ...FIXTURE, forecast: FORECAST };
-const fcChoices = (patch = {}) => choices({ mode: 'forecast', day: 1, ...patch });
+const WITH_STORM = { ...FIXTURE, storm: STORM };
+const stChoices = (patch = {}) => choices({ mode: 'storm', day: 1, ...patch });
 
 describe('times and austinTime', () => {
-  it('formats severity as times a 1-year storm', () => {
+  it('formats risk as times a 1-year storm', () => {
     expect(times(1.313)).toBe('1.31×');
     expect(times(0.2)).toBe('0.20×');
   });
@@ -356,51 +356,52 @@ describe('times and austinTime', () => {
   });
 });
 
-describe('buildView: forecast', () => {
-  it('classifies 1.0 as near a 1-year storm and 1.1 as above it', () => {
-    expect(classify(SEV, 1.0).name).toBe('Near a 1-year storm');
-    expect(classify(SEV, 1.1).name).toBe('Above a 1-year storm');
-    expect(classify(SEV, 0.24).name).toBe('Very light');
+describe('buildView: storm risk', () => {
+  it('names risk classes, with 1.0 elevated and 1.1 high', () => {
+    expect(classify(SEV, 1.0).name).toBe('Elevated');
+    expect(classify(SEV, 1.1).name).toBe('High');
+    expect(classify(SEV, 0.24).name).toBe('Very low');
   });
 
   it('names the day window in Austin time and ranks districts', () => {
-    const v = buildView(WITH_FORECAST, fcChoices({ day: 2 }));
-    expect(v.isForecast).toBe(true);
-    expect(v.title).toBe('Rain forecast, day 2: Oct 1, 7 PM to Oct 2, 7 PM');
+    const v = buildView(WITH_STORM, stChoices({ day: 2 }));
+    expect(v.isStorm).toBe(true);
+    expect(v.title).toBe('Storm risk: Oct 1, 7 PM to Oct 2, 7 PM');
     expect(v.ranked.slice(0, 3)).toEqual([10, 8, 5]);
-    expect(v.insight).toBe('Highest: District 10 (1.31×). Lowest: District 9 (0.30×). 2 of 10 districts reach a 1-year storm or more.');
+    expect(v.insight).toBe('Citywide, District 10 has the highest risk (1.31×) and District 9 the lowest (0.30×). 2 of 10 districts reach a 1-year storm or more.');
   });
 
   it('handles one, none and every district at a 1-year storm', () => {
-    expect(buildView(WITH_FORECAST, fcChoices({ day: 3 })).insight).toMatch(/1 of 10 districts reaches a 1-year storm or more\.$/);
-    expect(buildView(WITH_FORECAST, fcChoices({ day: 1 })).insight).toMatch(/No district reaches a 1-year storm\.$/);
-    const wet = { ...FIXTURE, forecast: { ...FORECAST, districts: Object.fromEntries(DISTRICTS.map((d) => [d, [1, 1, 1]])) } };
-    expect(buildView(wet, fcChoices()).insight).toMatch(/Every district reaches a 1-year storm\.$/);
+    expect(buildView(WITH_STORM, stChoices({ day: 3 })).insight).toMatch(/1 of 10 districts reaches a 1-year storm or more\.$/);
+    expect(buildView(WITH_STORM, stChoices({ day: 1 })).insight).toMatch(/No district reaches a 1-year storm\.$/);
+    const wet = { ...FIXTURE, storm: { ...STORM, districts: Object.fromEntries(DISTRICTS.map((d) => [d, [1, 1, 1]])) } };
+    expect(buildView(wet, stChoices()).insight).toMatch(/Every district reaches a 1-year storm\.$/);
   });
 
-  it('describes the selected district and its wettest day', () => {
-    const v = buildView(WITH_FORECAST, fcChoices({ day: 1, sel: 10 }));
-    expect(v.selected.sentence).toBe('On day 1, the heaviest 24-hour rain forecast in District 10 is 0.20× a 1-year storm '
-      + '(20% of the rain Austin sees about once a year). Its wettest day in this forecast is day 2 (1.31×).');
-    expect(v.selected.compare.map((c) => c.label)).toEqual(['Day 1, Oct 1', 'Day 2, Oct 2', 'Day 3, Oct 3']);
+  it('describes the selected district and its highest-risk day', () => {
+    const v = buildView(WITH_STORM, stChoices({ day: 1, sel: 10 }));
+    expect(v.selected.sentence).toBe('For Sep 30, 7 PM to Oct 1, 7 PM, the heaviest 24-hour rain expected in District 10 is 0.20× a 1-year storm '
+      + '(20% of the rain Austin sees about once a year). Its highest-risk day in this storm is Oct 2 (1.31×).');
+    expect(v.selected.compare.map((c) => c.label)).toEqual(['Oct 1, 1 day out', 'Oct 2, 2 days out', 'Oct 3, 3 days out']);
     expect(v.selected.compare.map((c) => c.active)).toEqual([true, false, false]);
   });
 
-  it('builds a districts by days table and says it is a sample, not a warning', () => {
-    const v = buildView(WITH_FORECAST, fcChoices({ day: 3 }));
-    expect(v.table.columns.map((c) => [c.head, c.sub, c.active])).toEqual([['Day 1', 'Oct 1', false], ['Day 2', 'Oct 2', false], ['Day 3', 'Oct 3', true]]);
+  it('builds a districts by days table and says it is an example, not a warning', () => {
+    const v = buildView(WITH_STORM, stChoices({ day: 3 }));
+    expect(v.table.columns.map((c) => [c.head, c.sub, c.active])).toEqual([['Oct 1', '1 day out', false], ['Oct 2', '2 days out', false], ['Oct 3', '3 days out', true]]);
     expect(v.table.rows[2].cells[2]).toMatchObject({ label: '1.60×', set: { day: 3 } });
     expect(v.table.footer).toBeNull();
-    expect(v.forecast.banner).toBe('Prototype with one sample forecast (RRFS, issued Sep 30, 2026, 7 PM, Austin time). Not live and not an official warning.');
+    expect(v.storm.banner).toBe('Example storm, assessed Sep 30, 2026, 7 PM (Austin time). This example is not updated and is not an official warning.');
+    expect(v.storm.days.map((d) => [d.label, d.sub])).toEqual([['Oct 1', '1 day out'], ['Oct 2', '2 days out'], ['Oct 3', '3 days out']]);
     expect(v.calendar).toBeNull();
   });
 
-  it('falls back to day 1 for a day the forecast does not have', () => {
-    expect(buildView(WITH_FORECAST, fcChoices({ day: 7 })).title).toMatch(/^Rain forecast, day 1:/);
+  it('falls back to day 1 for a day the file does not have', () => {
+    expect(buildView(WITH_STORM, stChoices({ day: 7 })).title).toBe('Storm risk: Sep 30, 7 PM to Oct 1, 7 PM');
   });
 
-  it('is not used when there is no forecast file', () => {
-    expect(buildView(FIXTURE, fcChoices()).isForecast).toBe(false);
+  it('is not used when there is no storm risk file', () => {
+    expect(buildView(FIXTURE, stChoices()).isStorm).toBe(false);
   });
 });
 
@@ -418,13 +419,13 @@ describe('buildView: shipped data in public/data', () => {
   const load = (file) => JSON.parse(readFileSync(new URL(`../../public/data/${file}`, import.meta.url), 'utf8'));
   const data = {
     meta: load('meta.json'), direction: load('direction_districts.json'), uhi: load('uhi_top3.json'),
-    calendar: load('direction_calendar.json'), forecast: load('forecast.json'),
+    calendar: load('direction_calendar.json'), storm: load('storm_risk.json'),
   };
 
   const allChoices = [
     ...DIRECTIONS.flatMap((dir) => DISTRICTS.flatMap((sel) => ['districts', 'grid'].map((unit) => choices({ dir, sel, unit })))),
     ...CONDITIONS.flatMap(([time, uhi]) => DISTRICTS.map((sel) => uhiChoices({ time, uhi, sel }))),
-    ...data.forecast.days.flatMap(({ day }) => DISTRICTS.map((sel) => fcChoices({ day, sel }))),
+    ...data.storm.days.flatMap(({ day }) => DISTRICTS.map((sel) => stChoices({ day, sel }))),
   ];
 
   const strings = (o) => (typeof o === 'string' ? [o] : o && typeof o === 'object' ? Object.values(o).flatMap(strings) : []);
@@ -452,15 +453,15 @@ describe('buildView: shipped data in public/data', () => {
     }
   });
 
-  it('has a forecast value for every district and day', () => {
-    expect(Object.keys(data.forecast.districts).map(Number).sort((a, b) => a - b)).toEqual(DISTRICTS);
-    for (const values of Object.values(data.forecast.districts)) {
-      expect(values).toHaveLength(data.forecast.days.length);
+  it('has a storm risk value for every district and day', () => {
+    expect(Object.keys(data.storm.districts).map(Number).sort((a, b) => a - b)).toEqual(DISTRICTS);
+    for (const values of Object.values(data.storm.districts)) {
+      expect(values).toHaveLength(data.storm.days.length);
       for (const v of values) expect(v).toBeGreaterThanOrEqual(0);
     }
   });
 
-  const label = (c) => (c.mode === 'direction' ? `${c.dir} ${c.unit}` : c.mode === 'forecast' ? `day ${c.day}` : `${c.time}|${c.uhi}`);
+  const label = (c) => (c.mode === 'direction' ? `${c.dir} ${c.unit}` : c.mode === 'storm' ? `day ${c.day}` : `${c.time}|${c.uhi}`);
   it.each(allChoices.map((c) => [`${c.mode} ${label(c)} D${c.sel}`, c]))(
     'builds clean copy for %s',
     (_, c) => {

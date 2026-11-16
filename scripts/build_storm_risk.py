@@ -1,4 +1,4 @@
-"""Turn a district severity forecast GeoJSON (ChangJae's RRFS output) into public/data/forecast.json.
+"""Turn ChangJae's district severity GeoJSON (RRFS weather model run) into public/data/storm_risk.json.
 
 Input: one FeatureCollection with a feature per council district. Properties:
   district_name   "District 7"
@@ -13,7 +13,7 @@ Output (about 1 KB; the app already has the district shapes):
 
 Assumption until ChangJae confirms: day N covers issue_time + (N-1)*24 h to issue_time + N*24 h.
 
-Run:  python scripts/build_forecast.py data/raw/rrfs_district_severity_2026100100.geojson
+Run:  python scripts/build_storm_risk.py data/raw/rrfs_district_severity_2026100100.geojson
 """
 import argparse
 import json
@@ -54,7 +54,7 @@ def build(src):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("src")
-    ap.add_argument("--out", default=ROOT / "public" / "data" / "forecast.json")
+    ap.add_argument("--out", default=ROOT / "public" / "data" / "storm_risk.json")
     args = ap.parse_args()
     out = build(args.src)
     Path(args.out).write_text(json.dumps(out, indent=1) + "\n")

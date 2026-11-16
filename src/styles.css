@@ -54,8 +54,8 @@ legend { font-size: 14px; font-weight: 500; margin-bottom: 10px; }
 .count span { font-size: 13px; color: var(--muted); }
 
 .view-title { margin: 0; font-size: 22px; font-weight: 500; }
-.forecast-banner { margin: 0; padding: 10px 14px; border-radius: var(--radius); font-size: 14px; background: rgba(229, 160, 28, 0.12); border: 1px solid rgba(229, 160, 28, 0.55); }
-.forecast-banner a { color: inherit; }
+.storm-banner { margin: 0; padding: 10px 14px; border-radius: var(--radius); font-size: 14px; background: rgba(229, 160, 28, 0.12); border: 1px solid rgba(229, 160, 28, 0.55); }
+.storm-banner a { color: inherit; }
 .insight { margin: 0; padding: 12px 14px; border-radius: var(--radius); background: rgba(144, 202, 249, 0.10); border: 1px solid rgba(144, 202, 249, 0.35); }
 .howto { font-size: 13px; color: #CBD5E0; }
 .howto summary { cursor: pointer; color: var(--accent); font-weight: 500; min-height: 28px; }

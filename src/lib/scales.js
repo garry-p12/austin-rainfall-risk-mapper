@@ -20,15 +20,15 @@ export const RC = [
   { max: Infinity, name: 'Highest', label: 'More than 25% above', fill: '#C21F1F', ink: '#FFFFFF' },
 ];
 
-// Forecast severity: forecast 24-hour rain / NOAA Atlas 14 1-year 24-hour depth.
+// Storm risk: expected 24-hour rain / NOAA Atlas 14 1-year 24-hour depth.
 // 1.0 = a 1-year storm. Same diverging colors as RC, centered on the 1-year storm.
 export const SEV = [
-  { max: 0.25, name: 'Very light', label: 'Under 0.25×', fill: RC[0].fill, ink: RC[0].ink },
-  { max: 0.5, name: 'Light', label: '0.25–0.5×', fill: RC[1].fill, ink: RC[1].ink },
+  { max: 0.25, name: 'Very low', label: 'Under 0.25×', fill: RC[0].fill, ink: RC[0].ink },
+  { max: 0.5, name: 'Low', label: '0.25–0.5×', fill: RC[1].fill, ink: RC[1].ink },
   { max: 0.9, name: 'Moderate', label: '0.5–0.9×', fill: RC[2].fill, ink: RC[2].ink },
-  { max: 1.1, name: 'Near a 1-year storm', label: '0.9–1.1×', fill: RC[3].fill, ink: RC[3].ink },
-  { max: 1.5, name: 'Above a 1-year storm', label: '1.1–1.5×', fill: RC[4].fill, ink: RC[4].ink },
-  { max: Infinity, name: 'Well above', label: 'Over 1.5×', fill: RC[5].fill, ink: RC[5].ink },
+  { max: 1.1, name: 'Elevated', label: '0.9–1.1×', fill: RC[3].fill, ink: RC[3].ink },
+  { max: 1.5, name: 'High', label: '1.1–1.5×', fill: RC[4].fill, ink: RC[4].ink },
+  { max: Infinity, name: 'Very high', label: 'Over 1.5×', fill: RC[5].fill, ink: RC[5].ink },
 ];
 
 export const classify = (scale, v) => scale.find((c) => v < c.max);

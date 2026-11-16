@@ -45,15 +45,19 @@ export function buildCalendar(cal, dir) {
 export const gridCellTip = (props, dir) =>
   `${pct(props[`rc_${dir}`])} vs. regional average (cell in District ${props.district})`;
 
-// Forecast view: one model run, severity per district per forecast day.
-// Severity = forecast 24-hour rain / NOAA Atlas 14 1-year 24-hour depth, highest grid cell in the district.
-export function buildForecast(fc, s) {
-  const days = fc.days;
+// Storm risk view: risk for each district on each day of one upcoming storm, measured against history.
+// Risk = heaviest 24-hour rain the weather model expects in the district (wettest grid cell)
+// divided by the NOAA Atlas 14 1-year 24-hour depth, the rain Austin sees about once a year.
+// Day N is assessed N days out; later assessments of the same day replace earlier ones.
+const daysOut = (n) => `${n} day${n === 1 ? '' : 's'} out`;
+
+export function buildStormRisk(st, s) {
+  const days = st.days;
   const day = days.find((d) => d.day === s.day) ?? days[0];
   const i = days.indexOf(day);
-  const valueAt = (district, k) => fc.districts[district][k];
+  const valueAt = (district, k) => st.districts[district][k];
   const window = `${austinTime(day.start)} to ${austinTime(day.end)}`;
-  const dayName = (d) => `Day ${d.day}`;
+  const dayName = (d) => austinDate(d.end);
 
   const districts = {};
   for (const d of DISTRICTS) {
@@ -68,9 +72,9 @@ export function buildForecast(fc, s) {
   const atLeast = DISTRICTS.filter((d) => districts[d].value >= 1).length;
   const selDays = days.map((d, k) => ({ d, v: valueAt(s.sel, k) }));
   const worst = selDays.reduce((a, b) => (b.v > a.v ? b : a));
-  const issued = austinTime(fc.issue_time, true);
+  const assessed = austinTime(st.issue_time, true);
 
-  const columns = days.map((d) => ({ key: String(d.day), head: dayName(d), sub: austinDate(d.end), active: d === day, set: { day: d.day } }));
+  const columns = days.map((d) => ({ key: String(d.day), head: dayName(d), sub: daysOut(d.day), active: d === day, set: { day: d.day } }));
   const rows = DISTRICTS.map((d) => ({
     district: d,
     cells: columns.map((col, k) => {
@@ -80,42 +84,42 @@ export function buildForecast(fc, s) {
   }));
 
   return {
-    isDir: false, isForecast: true, scale: SEV, districts, ranked, barMax: 2,
-    title: `Rain forecast, day ${day.day}: ${window}`,
-    subtitle: 'The heaviest 24-hour rain forecast in each district, compared with the 1-year storm from NOAA Atlas 14.',
-    insight: `Highest: ${name(top)} (${districts[top].label}). Lowest: ${name(low)} (${districts[low].label}). `
+    isDir: false, isStorm: true, scale: SEV, districts, ranked, barMax: 2,
+    title: `Storm risk: ${window}`,
+    subtitle: 'How the heaviest 24-hour rain expected in each district compares with the 1-year storm from NOAA Atlas 14, the rain Austin sees about once a year.',
+    insight: `Citywide, ${name(top)} has the highest risk (${districts[top].label}) and ${name(low)} the lowest (${districts[low].label}). `
       + (atLeast === 10 ? 'Every district reaches a 1-year storm.'
         : atLeast === 0 ? 'No district reaches a 1-year storm.'
           : `${atLeast} of 10 districts ${atLeast === 1 ? 'reaches' : 'reach'} a 1-year storm or more.`),
     howTo: [
-      'Severity is the forecast 24-hour rain divided by the 1-year storm from NOAA Atlas 14, the rain Austin sees about once a year. 1.00× matches a 1-year storm.',
-      'Each district shows its wettest model grid cell (about 3 km), so part of the district may get less.',
-      'This is one sample model run, not a live forecast. For decisions, use the National Weather Service.',
+      'Risk compares the heaviest 24-hour rain expected in a district with the 1-year storm from NOAA Atlas 14. 1.00× is as much rain as Austin sees about once a year.',
+      'Risk is assessed up to 3 days out and gets better as the storm gets closer: 1 day out is more reliable than 3 days out.',
+      'Each district shows its wettest grid cell (about 3 km), so parts of the district may get less.',
     ],
     storms: null,
     stormsNote: null,
-    forecast: {
-      issued: `${fc.model} model run issued ${issued} (Austin time)`,
-      banner: `Prototype with one sample forecast (${fc.model}, issued ${issued}, Austin time). Not live and not an official warning.`,
-      days: days.map((d) => ({ value: d.day, label: dayName(d), sub: austinDate(d.end) })),
+    storm: {
+      assessed: `Assessed ${assessed} (Austin time) with the ${st.model} weather model`,
+      banner: `Example storm, assessed ${assessed} (Austin time). This example is not updated and is not an official warning.`,
+      days: days.map((d) => ({ value: d.day, label: dayName(d), sub: daysOut(d.day) })),
     },
     calendar: null,
     selected: {
       district: s.sel, name: name(s.sel), ...sel,
-      sentence: `On day ${day.day}, the heaviest 24-hour rain forecast in ${name(s.sel)} is ${sel.label} a 1-year storm `
+      sentence: `For ${window}, the heaviest 24-hour rain expected in ${name(s.sel)} is ${sel.label} a 1-year storm `
         + `(${Math.round(sel.value * 100)}% of the rain Austin sees about once a year). `
-        + `Its wettest day in this forecast is day ${worst.d.day} (${times(worst.v)}).`,
+        + `Its highest-risk day in this storm is ${dayName(worst.d)} (${times(worst.v)}).`,
       compareTitle: `${name(s.sel)}, day by day`,
-      compare: selDays.map(({ d, v }) => ({ key: String(d.day), label: `${dayName(d)}, ${austinDate(d.end)}`, value: times(v), cls: classify(SEV, v), active: d === day })),
+      compare: selDays.map(({ d, v }) => ({ key: String(d.day), label: `${dayName(d)}, ${daysOut(d.day)}`, value: times(v), cls: classify(SEV, v), active: d === day })),
     },
     table: {
-      title: 'Every district, every forecast day',
-      note: 'Forecast rain compared with a 1-year storm. Select a cell to show it on the map.',
+      title: 'Every district, every day of the storm',
+      note: 'Rain expected compared with a 1-year storm. Select a cell to show it on the map.',
       columns, rows, footer: null,
     },
     legend: {
-      title: 'Forecast rain compared with a 1-year storm',
-      note: 'District value = wettest model grid cell (about 3 km) inside it.',
+      title: 'Rain expected compared with a 1-year storm',
+      note: 'District value = wettest grid cell (about 3 km) inside it.',
     },
   };
 }
@@ -123,7 +127,7 @@ export function buildForecast(fc, s) {
 // Everything the screen shows for the current choices, computed in one place.
 // Pure function: (data, choices) -> view. Components only render what it returns.
 export function buildView(data, s) {
-  if (s.mode === 'forecast' && data.forecast) return buildForecast(data.forecast, s);
+  if (s.mode === 'storm' && data.storm) return buildStormRisk(data.storm, s);
   const isDir = s.mode === 'direction';
   const condKey = `${s.time}|${s.uhi}`;
   const scale = isDir ? RC : TOP3;
@@ -209,7 +213,7 @@ export function buildView(data, s) {
   const footer = isDir ? DIRECTIONS.map((d) => ({ key: d, label: pct(data.meta.city_average[d]) })) : null;
 
   return {
-    isDir, isForecast: false, scale, districts, ranked, barMax: isDir ? 1.4 : 45, title, subtitle, insight, howTo, storms, stormsNote,
+    isDir, isStorm: false, scale, districts, ranked, barMax: isDir ? 1.4 : 45, title, subtitle, insight, howTo, storms, stormsNote,
     calendar: isDir ? buildCalendar(data.calendar, s.dir) : null,
     selected: { district: s.sel, name: name(s.sel), ...sel, sentence, compareTitle, compare },
     table: {

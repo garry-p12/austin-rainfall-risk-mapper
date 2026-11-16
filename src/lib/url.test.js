@@ -14,8 +14,8 @@ describe('searchFromChoices', () => {
       .toBe('?view=uhi&time=day&heat=moderate&district=10');
   });
 
-  it('writes only the day in the forecast view', () => {
-    expect(searchFromChoices({ ...DEFAULTS, mode: 'forecast', day: 2, sel: 8 })).toBe('?view=forecast&day=2&district=8');
+  it('writes only the day in the storm risk view', () => {
+    expect(searchFromChoices({ ...DEFAULTS, mode: 'storm', day: 2, sel: 8 })).toBe('?view=storm&day=2&district=8');
   });
 });
 
@@ -28,7 +28,7 @@ describe('choicesFromSearch', () => {
     const cases = [
       { ...DEFAULTS, dir: 'NW', unit: 'grid', sel: 9 },
       { ...DEFAULTS, mode: 'uhi', time: 'Day', uhi: 'Weak', sel: 1 },
-      { ...DEFAULTS, mode: 'forecast', day: 3, sel: 10 },
+      { ...DEFAULTS, mode: 'storm', day: 3, sel: 10 },
     ];
     for (const c of cases) {
       const back = choicesFromSearch(searchFromChoices(c), DEFAULTS);
@@ -48,8 +48,8 @@ describe('choicesFromSearch', () => {
     expect(choicesFromSearch('?district=0', DEFAULTS).sel).toBe(5);
     expect(choicesFromSearch('?district=2.5', DEFAULTS).sel).toBe(5);
     expect(choicesFromSearch('?district=abc', DEFAULTS).sel).toBe(5);
-    expect(choicesFromSearch('?view=forecast&day=1.5', DEFAULTS).day).toBe(1);
-    expect(choicesFromSearch('?view=forecast&day=x', DEFAULTS).day).toBe(1);
+    expect(choicesFromSearch('?view=storm&day=1.5', DEFAULTS).day).toBe(1);
+    expect(choicesFromSearch('?view=storm&day=x', DEFAULTS).day).toBe(1);
   });
 
   it('keeps settings for the other view at their defaults', () => {

@@ -32,7 +32,7 @@ export const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 export const mph = (kmh) => `${Math.round(kmh * 0.621371)} mph`;
 // 2.5 -> "about 2.5 hours", 1 -> "about 1 hour"
 export const aboutHours = (h) => `about ${h} hour${h === 1 ? '' : 's'}`;
-// 1.313 -> "1.31×" (forecast severity, times a 1-year storm)
+// 1.313 -> "1.31×" (storm risk, times a 1-year storm)
 export const times = (v) => `${v.toFixed(2)}×`;
 // ISO UTC time -> Austin local time, e.g. "Sep 30, 7 PM" (with year: "Sep 30, 2026, 7 PM").
 const AUSTIN = { timeZone: 'America/Chicago', month: 'short', day: 'numeric', hour: 'numeric' };
