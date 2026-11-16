@@ -15,7 +15,7 @@ describe('searchFromChoices', () => {
   });
 
   it('writes only the day in the storm risk view', () => {
-    expect(searchFromChoices({ ...DEFAULTS, mode: 'storm', day: 2, sel: 8 })).toBe('?view=storm&day=2&district=8');
+    expect(searchFromChoices({ ...DEFAULTS, mode: 'storm', day: 2, unit: 'city', sel: 8 })).toBe('?view=storm&day=2&unit=city&district=8');
   });
 });
 
@@ -27,6 +27,8 @@ describe('choicesFromSearch', () => {
   it('round-trips every view', () => {
     const cases = [
       { ...DEFAULTS, dir: 'NW', unit: 'grid', sel: 9 },
+      { ...DEFAULTS, dir: 'E', unit: 'watersheds', sel: 4 },
+      { ...DEFAULTS, mode: 'storm', day: 2, unit: 'city', sel: 6 },
       { ...DEFAULTS, mode: 'uhi', time: 'Day', uhi: 'Weak', sel: 1 },
       { ...DEFAULTS, mode: 'storm', day: 3, sel: 10 },
     ];

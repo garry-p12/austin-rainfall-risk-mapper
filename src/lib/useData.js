@@ -8,9 +8,11 @@ const FILES = {
   grid: 'direction_grid.geojson',
   calendar: 'direction_calendar.json',
   uhi: 'uhi_top3.json',
+  city: 'city.geojson',
 };
-// Files the app can run without. With no storm risk file, the storm risk view is hidden.
-const OPTIONAL = { storm: 'storm_risk.json' };
+// Files the app can run without. With no storm risk file the storm risk view is hidden;
+// with no watersheds file the watershed map unit is hidden.
+const OPTIONAL = { storm: 'storm_risk.json', watersheds: 'watersheds.geojson' };
 
 // Load every data file once. Files live in public/data and are produced by
 // scripts/build_data.py, so the app never needs to know about the raw research outputs.

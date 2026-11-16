@@ -9,7 +9,7 @@ Two ways to look at the data:
 
 - **Storm direction.** For storms arriving from each of 8 directions, how intense the heaviest
   1–6 hour rain was in each district compared with the regional average for the same storm.
-  Shown per district or per ~1 km grid cell.
+  Shown for the whole city, per council district, per watershed, or per ~1 km grid cell.
 - **Time of day and urban heat.** How often each district was one of the 3 hardest-hit
   districts, for day and night storms under strong, moderate and weak urban heat islands.
 
@@ -49,6 +49,8 @@ is committed, so the workflow needs no Python or raw research files.
    (the script checks that their storm counts agree), plus `object_summary.csv` and
    `events_direction.csv` from her storm tracking (used for the storm calendar).
 2. Optional, for full-detail district boundaries: `python scripts/fetch_districts.py`.
+   Watershed boundaries (City of Austin Watershed Protection Department) are in
+   `data/raw/watersheds.geojson`; refresh them with `python scripts/fetch_watersheds.py`.
 3. `npm run data` (with the `.venv` active), then `npm test`, then reload the app.
 
 `data/raw/uhi_top3.json` holds the day/night × urban heat values. They were transcribed from the
@@ -76,6 +78,8 @@ assessment time (assumed), direction and timing scenarios for 1 day out, and wat
 ```
 scripts/build_data.py      raw research outputs -> small files in public/data/
 scripts/fetch_districts.py download detailed council district boundaries
+scripts/fetch_watersheds.py download City of Austin watershed boundaries
+scripts/build_storm_risk.py ChangJae's district severity file -> public/data/storm_risk.json
 data/raw/                  research inputs (not committed; see .gitignore)
 public/data/               files the app loads
 src/lib/view.js            all numbers and wording for the current selection (pure function)

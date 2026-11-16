@@ -17,6 +17,13 @@ function Toggle({ options, value, onChange, columns }) {
 export default function ConditionPanel({ choices, update, view, hasStorm }) {
   const isDir = choices.mode === 'direction';
   const modes = [{ value: 'direction', label: 'Storm direction' }, { value: 'uhi', label: 'Time of day and urban heat' }];
+  // City, districts, watersheds, grid: whichever this view offers.
+  const unitPicker = view.units.length > 0 && (
+    <fieldset>
+      <legend>Map unit</legend>
+      <Toggle columns={2} value={view.unit} onChange={(unit) => update({ unit })} options={view.units} />
+    </fieldset>
+  );
   if (hasStorm) modes.push({ value: 'storm', label: 'Upcoming storm risk', sub: 'Example storm' });
   return (
     <aside className="panel side" aria-label="Storm conditions">
@@ -36,18 +43,17 @@ export default function ConditionPanel({ choices, update, view, hasStorm }) {
               ) : <span key="austin" className="compass-center" aria-hidden="true">★</span>))}
             </div>
           </fieldset>
-          <fieldset>
-            <legend>Map unit</legend>
-            <Toggle value={choices.unit} onChange={(unit) => update({ unit })}
-              options={[{ value: 'districts', label: 'Districts' }, { value: 'grid', label: '1 km grid' }]} />
-          </fieldset>
+          {unitPicker}
         </>
       ) : view.storm ? (
-        <fieldset>
-          <legend>Day of the storm</legend>
-          <Toggle value={view.storm.days.find((d) => d.value === choices.day) ? choices.day : view.storm.days[0].value}
-            onChange={(day) => update({ day })} options={view.storm.days} />
-        </fieldset>
+        <>
+          <fieldset>
+            <legend>Day of the storm</legend>
+            <Toggle value={view.storm.days.find((d) => d.value === choices.day) ? choices.day : view.storm.days[0].value}
+              onChange={(day) => update({ day })} options={view.storm.days} />
+          </fieldset>
+          {unitPicker}
+        </>
       ) : (
         <>
           <fieldset>

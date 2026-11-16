@@ -5,7 +5,7 @@ import * as maplibregl from 'maplibre-gl';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import { rcStepExpression } from '../lib/scales.js';
 import { DISTRICTS, DIR_NAMES } from '../lib/format.js';
-import { gridCellTip } from '../lib/view.js';
+import { gridCellTip, watershedTip } from '../lib/view.js';
 
 maplibregl.setWorkerUrl(workerUrl);
 
@@ -67,9 +67,17 @@ export default function RiskMap({ data, view, choices, userPoint, onSelect }) {
         // promoteId lets us color each district through feature-state without rebuilding the source.
         map.addSource('districts', { type: 'geojson', data: data.districts, promoteId: 'district' });
         map.addSource('grid', { type: 'geojson', data: data.grid });
+        map.addSource('city', { type: 'geojson', data: data.city });
+        map.addSource('watersheds', { type: 'geojson', data: data.watersheds ?? { type: 'FeatureCollection', features: [] } });
 
         map.addLayer({ id: 'grid-fill', type: 'fill', source: 'grid', layout: { visibility: 'none' },
           paint: { 'fill-color': rcStepExpression('rc_S'), 'fill-opacity': 0.85, 'fill-antialias': false } });
+        map.addLayer({ id: 'watershed-fill', type: 'fill', source: 'watersheds', layout: { visibility: 'none' },
+          paint: { 'fill-color': rcStepExpression('rc_S'), 'fill-opacity': 0.85 } });
+        map.addLayer({ id: 'watershed-line', type: 'line', source: 'watersheds', layout: { visibility: 'none' },
+          paint: { 'line-color': '#121212', 'line-width': 0.8 } });
+        map.addLayer({ id: 'city-fill', type: 'fill', source: 'city', layout: { visibility: 'none' },
+          paint: { 'fill-color': '#4A5568', 'fill-opacity': 0.82 } });
         map.addLayer({ id: 'district-fill', type: 'fill', source: 'districts',
           paint: { 'fill-color': ['coalesce', ['feature-state', 'fill'], '#4A5568'], 'fill-opacity': 0.82 } });
         map.addLayer({ id: 'district-line', type: 'line', source: 'districts',
@@ -84,16 +92,18 @@ export default function RiskMap({ data, view, choices, userPoint, onSelect }) {
         map.on('mouseenter', 'district-fill', () => { map.getCanvas().style.cursor = 'pointer'; });
         map.on('mouseleave', 'district-fill', () => { map.getCanvas().style.cursor = ''; });
 
-        // Grid mode: hover (or tap) a cell to read its exact value.
+        // Grid and watershed modes: hover (or tap) a cell or watershed to read its exact value.
         const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10, maxWidth: 'none', className: 'cell-tip' });
         cellPopup.current = popup;
-        const showCell = (e) => {
-          const props = e.features?.[0]?.properties;
-          if (props) popup.setLngLat(e.lngLat).setText(gridCellTip(props, dirRef.current)).addTo(map);
-        };
-        map.on('mousemove', 'grid-fill', showCell);
-        map.on('click', 'grid-fill', showCell);
-        map.on('mouseleave', 'grid-fill', () => popup.remove());
+        for (const [layer, tip] of [['grid-fill', gridCellTip], ['watershed-fill', watershedTip]]) {
+          const show = (e) => {
+            const props = e.features?.[0]?.properties;
+            if (props) popup.setLngLat(e.lngLat).setText(tip(props, dirRef.current)).addTo(map);
+          };
+          map.on('mousemove', layer, show);
+          map.on('click', layer, show);
+          map.on('mouseleave', layer, () => popup.remove());
+        }
 
         // District labels are real buttons, so they work with keyboard and screen readers.
         for (const f of data.labels.features) {
@@ -126,7 +136,10 @@ export default function RiskMap({ data, view, choices, userPoint, onSelect }) {
     const apply = () => {
       const map = mapRef.current;
       if (!map || !ready.current) return;
-      const grid = view.isDir && choices.unit === 'grid';
+      const { unit } = view;
+      const grid = unit === 'grid';
+      const sheds = unit === 'watersheds';
+      const city = unit === 'city';
       for (const d of DISTRICTS) {
         const info = view.districts[d];
         map.setFeatureState({ source: 'districts', id: d }, { fill: info.cls.fill });
@@ -137,12 +150,19 @@ export default function RiskMap({ data, view, choices, userPoint, onSelect }) {
           m.el.setAttribute('aria-pressed', String(d === choices.sel));
         }
       }
-      map.setLayoutProperty('grid-fill', 'visibility', grid ? 'visible' : 'none');
+      const show = (layer, on) => map.setLayoutProperty(layer, 'visibility', on ? 'visible' : 'none');
+      show('grid-fill', grid);
+      show('watershed-fill', sheds);
+      show('watershed-line', sheds);
+      show('city-fill', city);
       if (grid) map.setPaintProperty('grid-fill', 'fill-color', rcStepExpression(`rc_${choices.dir}`));
-      map.setPaintProperty('district-fill', 'fill-opacity', grid ? 0 : 0.82);
-      map.setPaintProperty('district-line', 'line-color', grid ? 'rgba(18,18,18,0.9)' : '#121212');
+      if (sheds) map.setPaintProperty('watershed-fill', 'fill-color', rcStepExpression(`rc_${choices.dir}`));
+      if (city) map.setPaintProperty('city-fill', 'fill-color', view.city.cls.fill);
+      map.setPaintProperty('district-fill', 'fill-opacity', unit === 'districts' ? 0.82 : 0);
+      // Over watersheds, district lines go light so they stand apart from the dark watershed lines.
+      map.setPaintProperty('district-line', 'line-color', sheds ? 'rgba(255,255,255,0.6)' : unit === 'districts' ? '#121212' : 'rgba(18,18,18,0.9)');
       map.setFilter('district-selected', ['==', ['get', 'district'], choices.sel]);
-      if (!grid) cellPopup.current?.remove();
+      if (!grid && !sheds) cellPopup.current?.remove();
 
       // "Find my district" marker. Not a button: it only shows where the visitor is.
       if (userPoint && !youMarker.current) {

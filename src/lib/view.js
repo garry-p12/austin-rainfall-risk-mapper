@@ -41,6 +41,22 @@ export function buildCalendar(cal, dir) {
   };
 }
 
+// Map units each view offers. The storm risk data comes per district only, so it has no watersheds or grid.
+export const UNITS = {
+  direction: [
+    { value: 'city', label: 'City' }, { value: 'districts', label: 'Districts' },
+    { value: 'watersheds', label: 'Watersheds' }, { value: 'grid', label: '1 km grid' },
+  ],
+  storm: [{ value: 'city', label: 'City' }, { value: 'districts', label: 'Districts' }],
+  uhi: [],
+};
+// The unit actually shown: the chosen one if this view offers it (and its data exists), else districts.
+const unitFor = (mode, unit, hasWatersheds) =>
+  (UNITS[mode].some((u) => u.value === unit) && (unit !== 'watersheds' || hasWatersheds) ? unit : 'districts');
+
+// Tooltip for one watershed on the map (props are the watershed's GeoJSON properties).
+export const watershedTip = (props, dir) => `${props.name}: ${pct(props[`rc_${dir}`])} vs. regional average`;
+
 // Tooltip for one ~1 km grid cell on the map (props are the cell's GeoJSON properties).
 export const gridCellTip = (props, dir) =>
   `${pct(props[`rc_${dir}`])} vs. regional average (cell in District ${props.district})`;
@@ -73,6 +89,10 @@ export function buildStormRisk(st, s) {
   const selDays = days.map((d, k) => ({ d, v: valueAt(s.sel, k) }));
   const worst = selDays.reduce((a, b) => (b.v > a.v ? b : a));
   const assessed = austinTime(st.issue_time, true);
+  const unit = unitFor('storm', s.unit, false);
+  // Whole city = its highest-risk district, since risk is about the wettest spot.
+  const cityValue = districts[top].value;
+  const cityCls = classify(SEV, cityValue);
 
   const columns = days.map((d) => ({ key: String(d.day), head: dayName(d), sub: daysOut(d.day), active: d === day, set: { day: d.day } }));
   const rows = DISTRICTS.map((d) => ({
@@ -84,7 +104,14 @@ export function buildStormRisk(st, s) {
   }));
 
   return {
-    isDir: false, isStorm: true, scale: SEV, districts, ranked, barMax: 2,
+    isDir: false, isStorm: true, scale: SEV, districts, ranked, barMax: 2, unit, units: UNITS.storm,
+    city: {
+      value: cityValue, label: times(cityValue), cls: cityCls,
+      sentence: `For ${window}, the whole city's risk is ${cityCls.name.toLowerCase()}: the wettest spot reaches `
+        + `${times(cityValue)} a 1-year storm, in ${name(top)}. `
+        + (atLeast === 0 ? 'No district reaches a 1-year storm.'
+          : `${atLeast} of 10 districts ${atLeast === 1 ? 'reaches' : 'reach'} a 1-year storm or more.`),
+    },
     title: `Storm risk: ${window}`,
     subtitle: 'How the heaviest 24-hour rain expected in each district compares with the 1-year storm from NOAA Atlas 14, the rain Austin sees about once a year.',
     insight: `Citywide, ${name(top)} has the highest risk (${districts[top].label}) and ${name(low)} the lowest (${districts[low].label}). `
@@ -119,7 +146,7 @@ export function buildStormRisk(st, s) {
     },
     legend: {
       title: 'Rain expected compared with a 1-year storm',
-      note: 'District value = wettest grid cell (about 3 km) inside it.',
+      note: unit === 'city' ? 'Whole city = its highest-risk district.' : 'District value = wettest grid cell (about 3 km) inside it.',
     },
   };
 }
@@ -199,6 +226,25 @@ export function buildView(data, s) {
     stormsNote = 'hit the city under these conditions (2000–2024, excluding 2014–2015)';
   }
 
+  const unit = isDir ? unitFor('direction', s.unit, Boolean(data.watersheds)) : 'districts';
+  let city = null;
+  if (isDir) {
+    const v = data.meta.city_average[s.dir];
+    const p = Math.round((v - 1) * 100);
+    city = {
+      value: v, label: pct(v), cls: classify(RC, v),
+      sentence: `Across the whole city, storms from the ${DIR_NAMES[s.dir]} brought rain `
+        + (p === 0 ? 'about as intense as' : `${Math.abs(p)}% ${p > 0 ? 'more' : 'less'} intense than`)
+        + ` the regional average for the same storm. Districts range from ${districts[low].label} (${name(low)}) to ${districts[top].label} (${name(top)}).`,
+    };
+  }
+  const unitNote = {
+    city: 'Whole city = average of the ~1 km grid cells inside the city.',
+    districts: 'District value = average of the ~1 km grid cells inside it.',
+    watersheds: 'Watershed value = average of the ~1 km grid cells it covers inside the city. Watershed boundaries: City of Austin Watershed Protection Department.',
+    grid: 'Each square is one ~1 km grid cell inside the city.',
+  };
+
   // Comparison table: rows = districts, columns = directions or conditions.
   const columns = isDir
     ? DIRECTIONS.map((d) => ({ key: d, head: d, sub: `${data.meta.storm_counts[d]} storms`, active: d === s.dir, set: { dir: d } }))
@@ -213,7 +259,7 @@ export function buildView(data, s) {
   const footer = isDir ? DIRECTIONS.map((d) => ({ key: d, label: pct(data.meta.city_average[d]) })) : null;
 
   return {
-    isDir, isStorm: false, scale, districts, ranked, barMax: isDir ? 1.4 : 45, title, subtitle, insight, howTo, storms, stormsNote,
+    isDir, isStorm: false, scale, districts, ranked, barMax: isDir ? 1.4 : 45, unit, units: isDir ? UNITS.direction.filter((u) => u.value !== 'watersheds' || data.watersheds) : UNITS.uhi, city, title, subtitle, insight, howTo, storms, stormsNote,
     calendar: isDir ? buildCalendar(data.calendar, s.dir) : null,
     selected: { district: s.sel, name: name(s.sel), ...sel, sentence, compareTitle, compare },
     table: {
@@ -224,9 +270,7 @@ export function buildView(data, s) {
     },
     legend: {
       title: isDir ? 'Compared with the regional average' : 'Share of storms where the district was top 3',
-      note: isDir
-        ? (s.unit === 'grid' ? 'Each square is one ~1 km grid cell inside the city.' : 'District value = average of the ~1 km grid cells inside it.')
-        : 'If rain fell evenly, every district would be top 3 in 30% of storms.',
+      note: isDir ? unitNote[unit] : 'If rain fell evenly, every district would be top 3 in 30% of storms.',
     },
   };
 }

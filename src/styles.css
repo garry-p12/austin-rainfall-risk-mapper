@@ -145,3 +145,7 @@ legend { font-size: 14px; font-weight: 500; margin-bottom: 10px; }
 .rank-val { width: 52px; text-align: right; font-size: 12px; font-variant-numeric: tabular-nums; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* Whole-city summary above the selected district. */
+.city-summary { display: flex; flex-direction: column; gap: 8px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+.city-summary .chip { margin-top: 0; }

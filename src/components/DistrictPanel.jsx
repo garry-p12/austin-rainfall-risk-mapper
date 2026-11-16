@@ -6,6 +6,13 @@ export default function DistrictPanel({ view, update, districtShapes, onLocate }
   return (
     <aside className="panel side" aria-label="Selected district">
       <LocateMe districts={districtShapes} onLocate={onLocate} />
+      {view.city && (
+        <section className="city-summary" aria-label="Whole city">
+          <p className="eyebrow">Whole city</p>
+          <span className="chip" style={{ background: view.city.cls.fill, color: view.city.cls.ink }}>{view.city.cls.name} · {view.city.label}</span>
+          <p className="sentence">{view.city.sentence}</p>
+        </section>
+      )}
       <p className="eyebrow">Selected district</p>
       <h2 className="district-name">{selected.name}</h2>
       <span className="chip" style={{ background: selected.cls.fill, color: selected.cls.ink }}>{selected.cls.name}</span>

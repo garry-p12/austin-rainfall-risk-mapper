@@ -3,13 +3,13 @@ import { CONDITIONS, DIRECTIONS, DISTRICTS } from './format.js';
 // The current choices live in the page address so a view can be shared as a link, e.g.
 //   ?view=direction&dir=E&unit=grid&district=5
 //   ?view=uhi&time=night&heat=strong&district=10
-//   ?view=storm&day=2&district=8
+//   ?view=storm&day=2&unit=city&district=8
 // Only the parameters that matter for the chosen view are written. Anything missing or
 // not recognized falls back to the defaults, so an old or mistyped link still opens.
 
 const TIMES = [...new Set(CONDITIONS.map(([t]) => t))]; // Day, Night
 const HEATS = [...new Set(CONDITIONS.map(([, u]) => u))]; // Strong, Moderate, Weak
-const UNITS = ['districts', 'grid'];
+const UNITS = ['city', 'districts', 'watersheds', 'grid'];
 const MODES = { direction: 'direction', uhi: 'uhi', storm: 'storm' };
 
 // Case-insensitive match against a list of allowed values; returns the canonical spelling.
@@ -33,7 +33,7 @@ export function choicesFromSearch(search, defaults) {
 
 export function searchFromChoices(c) {
   const p = c.mode === 'direction' ? { view: 'direction', dir: c.dir, unit: c.unit, district: c.sel }
-    : c.mode === 'storm' ? { view: 'storm', day: c.day, district: c.sel }
+    : c.mode === 'storm' ? { view: 'storm', day: c.day, unit: c.unit, district: c.sel }
       : { view: 'uhi', time: c.time.toLowerCase(), heat: c.uhi.toLowerCase(), district: c.sel };
   return `?${new URLSearchParams(p)}`;
 }

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { buildView, gridCellTip } from './view.js';
+import { buildView, gridCellTip, watershedTip } from './view.js';
 import { RC, SEV, TOP3, classify } from './scales.js';
 import { CONDITIONS, DIRECTIONS, DISTRICTS, aboutHours, austinTime, mph, pct, times } from './format.js';
 
@@ -405,6 +405,53 @@ describe('buildView: storm risk', () => {
   });
 });
 
+describe('buildView: map units and whole city', () => {
+  const WITH_SHEDS = { ...FIXTURE, watersheds: { type: 'FeatureCollection', features: [] } };
+
+  it('offers city, districts, watersheds and grid for storm direction, falling back to districts', () => {
+    expect(buildView(WITH_SHEDS, choices({ unit: 'watersheds' })).unit).toBe('watersheds');
+    expect(buildView(FIXTURE, choices({ unit: 'watersheds' })).unit).toBe('districts'); // no watershed file
+    expect(buildView(FIXTURE, choices({ unit: 'city' })).unit).toBe('city');
+    expect(buildView(WITH_SHEDS, choices({ unit: 'grid' })).units.map((u) => u.value)).toEqual(['city', 'districts', 'watersheds', 'grid']);
+    expect(buildView(FIXTURE, choices()).units.map((u) => u.value)).toEqual(['city', 'districts', 'grid']);
+  });
+
+  it('explains each unit in the legend and credits the watershed source', () => {
+    expect(buildView(FIXTURE, choices({ unit: 'city' })).legend.note).toBe('Whole city = average of the ~1 km grid cells inside the city.');
+    expect(buildView(WITH_SHEDS, choices({ unit: 'watersheds' })).legend.note).toMatch(/City of Austin Watershed Protection Department\.$/);
+  });
+
+  it('summarizes the whole city for storm direction from the city average', () => {
+    const c = buildView(FIXTURE, choices({ dir: 'S' })).city;
+    expect(c).toMatchObject({ value: 1.16, label: '+16%' });
+    expect(c.cls.name).toBe('Much heavier');
+    expect(c.sentence).toBe('Across the whole city, storms from the south brought rain 16% more intense than the regional average '
+      + 'for the same storm. Districts range from +2% (District 6) to +40% (District 5).');
+    expect(buildView(FIXTURE, choices({ dir: 'NE' })).city.sentence).toMatch(/brought rain about as intense as the regional average/);
+  });
+
+  it('summarizes the whole city for storm risk from its highest-risk district', () => {
+    const v = buildView(WITH_STORM, stChoices({ day: 2, unit: 'city' }));
+    expect(v.unit).toBe('city');
+    expect(v.city).toMatchObject({ value: 1.313, label: '1.31×' });
+    expect(v.city.sentence).toBe("For Oct 1, 7 PM to Oct 2, 7 PM, the whole city's risk is high: the wettest spot reaches 1.31× a 1-year storm, "
+      + 'in District 10. 2 of 10 districts reach a 1-year storm or more.');
+    expect(v.legend.note).toBe('Whole city = its highest-risk district.');
+    expect(buildView(WITH_STORM, stChoices({ unit: 'grid' })).unit).toBe('districts');
+  });
+
+  it('has no city summary or unit choice for time of day and urban heat', () => {
+    const v = buildView(FIXTURE, uhiChoices({ unit: 'city' }));
+    expect(v.city).toBeNull();
+    expect(v.units).toEqual([]);
+    expect(v.unit).toBe('districts');
+  });
+
+  it('labels a watershed on hover', () => {
+    expect(watershedTip({ name: 'Onion Creek', rc_S: 1.304 }, 'S')).toBe('Onion Creek: +30% vs. regional average');
+  });
+});
+
 describe('buildView: purity', () => {
   it('does not modify its input and returns the same view for the same choices', () => {
     // FIXTURE is deep-frozen, so any write to it would throw in this ES module.
@@ -420,12 +467,13 @@ describe('buildView: shipped data in public/data', () => {
   const data = {
     meta: load('meta.json'), direction: load('direction_districts.json'), uhi: load('uhi_top3.json'),
     calendar: load('direction_calendar.json'), storm: load('storm_risk.json'),
+    watersheds: load('watersheds.geojson'),
   };
 
   const allChoices = [
-    ...DIRECTIONS.flatMap((dir) => DISTRICTS.flatMap((sel) => ['districts', 'grid'].map((unit) => choices({ dir, sel, unit })))),
+    ...DIRECTIONS.flatMap((dir) => DISTRICTS.flatMap((sel) => ['city', 'districts', 'watersheds', 'grid'].map((unit) => choices({ dir, sel, unit })))),
     ...CONDITIONS.flatMap(([time, uhi]) => DISTRICTS.map((sel) => uhiChoices({ time, uhi, sel }))),
-    ...data.storm.days.flatMap(({ day }) => DISTRICTS.map((sel) => stChoices({ day, sel }))),
+    ...data.storm.days.flatMap(({ day }) => DISTRICTS.flatMap((sel) => ['city', 'districts'].map((unit) => stChoices({ day, sel, unit })))),
   ];
 
   const strings = (o) => (typeof o === 'string' ? [o] : o && typeof o === 'object' ? Object.values(o).flatMap(strings) : []);
@@ -453,6 +501,16 @@ describe('buildView: shipped data in public/data', () => {
     }
   });
 
+  it('has watersheds inside the city with a value for every direction', () => {
+    const sheds = data.watersheds.features;
+    expect(sheds.length).toBeGreaterThan(40);
+    expect(new Set(sheds.map((f) => f.properties.name)).size).toBe(sheds.length);
+    for (const f of sheds) {
+      for (const d of DIRECTIONS) expect(f.properties[`rc_${d}`]).toBeGreaterThan(0);
+      expect(f.properties.area_km2).toBeGreaterThanOrEqual(1);
+    }
+  });
+
   it('has a storm risk value for every district and day', () => {
     expect(Object.keys(data.storm.districts).map(Number).sort((a, b) => a - b)).toEqual(DISTRICTS);
     for (const values of Object.values(data.storm.districts)) {
@@ -461,7 +519,7 @@ describe('buildView: shipped data in public/data', () => {
     }
   });
 
-  const label = (c) => (c.mode === 'direction' ? `${c.dir} ${c.unit}` : c.mode === 'storm' ? `day ${c.day}` : `${c.time}|${c.uhi}`);
+  const label = (c) => (c.mode === 'direction' ? `${c.dir} ${c.unit}` : c.mode === 'storm' ? `day ${c.day} ${c.unit}` : `${c.time}|${c.uhi}`);
   it.each(allChoices.map((c) => [`${c.mode} ${label(c)} D${c.sel}`, c]))(
     'builds clean copy for %s',
     (_, c) => {

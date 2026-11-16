@@ -5,6 +5,7 @@ Inputs (default: data/raw/):
                                           concentration on the ~1 km AORC grid
   final_event_directions_1792.csv         one row per storm event with its direction
   council_districts*.geojson              City of Austin council district boundaries
+  watersheds.geojson (optional)           City of Austin watershed boundaries (scripts/fetch_watersheds.py)
   object_summary.csv                      hourly storm objects per event (tracking output),
                                           used for when each storm was over the city
   events_direction.csv                    per-event motion summary (median speed)
@@ -16,6 +17,8 @@ Outputs (default: public/data/):
   direction_districts.json mean relative concentration per district and direction
   direction_grid.geojson   city grid cells with one value per direction
   direction_calendar.json  per direction: arrival month and hour (Austin time), speed, hours over city
+  watersheds.geojson       watersheds clipped to the city, with one value per direction
+  city.geojson             city outline (all council districts together)
   uhi_top3.json            copied through so the app has one data folder
   meta.json                storm counts, city averages, provenance
 
@@ -29,7 +32,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from shapely import contains_xy
-from shapely.ops import polylabel
+from shapely.ops import polylabel, unary_union
 from shapely.geometry import box, mapping, shape
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -51,6 +54,46 @@ def load_districts(path):
     if sorted(out) != list(range(1, 11)):
         raise ValueError(f"Expected districts 1-10, found {sorted(out)}")
     return out
+
+
+# Rough km per degree at Austin's latitude (30.3° N), for areas and sliver checks.
+KM_PER_DEG_LAT, KM_PER_DEG_LON = 110.9, 96.1
+MIN_WATERSHED_KM2 = 1.0
+
+
+def watershed_values(path, city, means, lat, lon, half_lat, half_lon):
+    """Mean relative concentration per direction for each watershed, inside the city only.
+
+    Watersheds are smaller than districts and many are narrow, so a cell counts in proportion to
+    how much of it overlaps the watershed (area-weighted mean), not by whether its center is inside.
+    Pieces of watersheds smaller than MIN_WATERSHED_KM2 inside the city are dropped as slivers.
+    """
+    features = []
+    for f in json.loads(path.read_text())["features"]:
+        part = shape(f["geometry"]).buffer(0).intersection(city)
+        area_km2 = part.area * KM_PER_DEG_LAT * KM_PER_DEG_LON
+        if part.is_empty or area_km2 < MIN_WATERSHED_KM2:
+            continue
+        x0, y0, x1, y1 = part.bounds
+        rows = np.nonzero((lat + half_lat > y0) & (lat - half_lat < y1))[0]
+        cols = np.nonzero((lon + half_lon > x0) & (lon - half_lon < x1))[0]
+        weights, values = [], []
+        for r in rows:
+            for c in cols:
+                w = box(lon[c] - half_lon, lat[r] - half_lat, lon[c] + half_lon, lat[r] + half_lat).intersection(part).area
+                if w > 0:
+                    weights.append(w)
+                    values.append(means[:, r, c])
+        avg = np.average(np.array(values), axis=0, weights=np.array(weights))
+        props = {"name": f["properties"]["name"], "area_km2": round(area_km2, 1)}
+        props.update({f"rc_{d}": round(float(avg[i]), 3) for i, d in enumerate(DIRECTIONS)})
+        geom = part.simplify(0.0002, preserve_topology=True)
+        features.append({"type": "Feature", "properties": props,
+                         "geometry": json.loads(json.dumps(mapping(geom)), parse_float=lambda x: round(float(x), 5))})
+    # Several watersheds share a name across pieces only if the source splits them; keep ids unique.
+    for i, f in enumerate(sorted(features, key=lambda f: f["properties"]["name"])):
+        f["id"] = i + 1
+    return {"type": "FeatureCollection", "features": features}
 
 
 def storm_calendar(raw, events):
@@ -162,6 +205,16 @@ def main():
     dump("direction_grid.geojson", {"type": "FeatureCollection", "features": cells})
     dump("direction_calendar.json", storm_calendar(args.raw, events))
 
+    city = unary_union(list(districts.values()))
+    dump("city.geojson", {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {},
+         "geometry": json.loads(json.dumps(mapping(city.simplify(0.0002, preserve_topology=True))),
+                                parse_float=lambda x: round(float(x), 5))}]})
+    sheds_path = args.raw / "watersheds.geojson"
+    sheds = None
+    if sheds_path.exists():
+        sheds = watershed_values(sheds_path, city, means, lat, lon, half_lat, half_lon)
+        dump("watersheds.geojson", sheds)
+
     uhi = args.raw / "uhi_top3.json"
     if uhi.exists():
         (args.out / "uhi_top3.json").write_text(uhi.read_text())
@@ -178,6 +231,7 @@ def main():
         "grid_cells_in_city": len(cells),
         "bounds": bounds,
         "districts_source": districts_path.name,
+        "watersheds_in_city": len(sheds["features"]) if sheds else 0,
     })
     print(f"Wrote {args.out} ({len(cells)} grid cells, {int(counts.sum())} storms, districts from {districts_path.name})")
 
