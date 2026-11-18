@@ -140,6 +140,8 @@ export function buildStormRisk(st, s) {
 // Everything the screen shows for the current choices, computed in one place.
 // Pure function: (data, choices) -> view. Components only render what it returns.
 export function buildView(data, s) {
+  // No district selected (the default): build as usual, then drop the selected-district details.
+  if (s.sel == null) return { ...buildView(data, { ...s, sel: DISTRICTS[0] }), selected: null };
   if (s.mode === 'storm' && data.storm) return buildStormRisk(data.storm, s);
   const isDir = s.mode === 'direction';
   const condKey = `${s.time}|${s.uhi}`;

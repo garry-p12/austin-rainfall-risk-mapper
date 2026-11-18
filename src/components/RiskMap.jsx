@@ -161,7 +161,7 @@ export default function RiskMap({ data, view, choices, userPoint, onSelect }) {
       map.setPaintProperty('district-fill', 'fill-opacity', unit === 'districts' ? 0.82 : 0);
       // Over watersheds, district lines go light so they stand apart from the dark watershed lines.
       map.setPaintProperty('district-line', 'line-color', sheds ? 'rgba(255,255,255,0.6)' : unit === 'districts' ? '#121212' : 'rgba(18,18,18,0.9)');
-      map.setFilter('district-selected', ['==', ['get', 'district'], choices.sel]);
+      map.setFilter('district-selected', ['==', ['get', 'district'], choices.sel ?? -1]);
       if (!grid && !sheds) cellPopup.current?.remove();
 
       // "Find my district" marker. Not a button: it only shows where the visitor is.

@@ -431,6 +431,18 @@ describe('buildView: map units and whole city', () => {
   });
 });
 
+describe('buildView: no district selected', () => {
+  it('builds the map, city and ranking but no selected-district details', () => {
+    for (const c of [choices({ sel: null }), uhiChoices({ sel: null }), stChoices({ sel: null })]) {
+      const v = buildView(WITH_STORM, c);
+      expect(v.selected).toBeNull();
+      expect(v.ranked).toHaveLength(10);
+      expect(v.insight.length).toBeGreaterThan(0);
+    }
+    expect(buildView(FIXTURE, choices({ sel: null })).city.label).toBe('+16%');
+  });
+});
+
 describe('buildView: purity', () => {
   it('does not modify its input and returns the same view for the same choices', () => {
     // FIXTURE is deep-frozen, so any write to it would throw in this ES module.

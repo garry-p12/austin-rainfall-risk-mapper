@@ -32,8 +32,10 @@ export function choicesFromSearch(search, defaults) {
 }
 
 export function searchFromChoices(c) {
-  const p = c.mode === 'direction' ? { view: 'direction', dir: c.dir, unit: c.unit, district: c.sel }
-    : c.mode === 'storm' ? { view: 'storm', day: c.day, unit: c.unit, district: c.sel }
-      : { view: 'uhi', time: c.time.toLowerCase(), heat: c.uhi.toLowerCase(), district: c.sel };
+  const p = c.mode === 'direction' ? { view: 'direction', dir: c.dir, unit: c.unit }
+    : c.mode === 'storm' ? { view: 'storm', day: c.day, unit: c.unit }
+      : { view: 'uhi', time: c.time.toLowerCase(), heat: c.uhi.toLowerCase() };
+  // A district is in the link only when one is selected, so the link opens its details.
+  if (c.sel != null) p.district = c.sel;
   return `?${new URLSearchParams(p)}`;
 }

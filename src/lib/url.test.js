@@ -14,6 +14,11 @@ describe('searchFromChoices', () => {
       .toBe('?view=uhi&time=day&heat=moderate&district=10');
   });
 
+  it('leaves the district out when none is selected', () => {
+    expect(searchFromChoices({ ...DEFAULTS, sel: null })).toBe('?view=direction&dir=S&unit=districts');
+    expect(choicesFromSearch('?view=direction&dir=S', { ...DEFAULTS, sel: null }).sel).toBeNull();
+  });
+
   it('writes only the day in the storm risk view', () => {
     expect(searchFromChoices({ ...DEFAULTS, mode: 'storm', day: 2, unit: 'city', sel: 8 })).toBe('?view=storm&day=2&unit=city&district=8');
   });

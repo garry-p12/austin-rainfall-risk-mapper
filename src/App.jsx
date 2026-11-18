@@ -9,7 +9,8 @@ import StormCalendar from './components/StormCalendar.jsx';
 import DistrictPanel from './components/DistrictPanel.jsx';
 
 // Default view: southern storms are the strongest signal in the data (citywide +16%).
-const INITIAL = { mode: 'direction', dir: 'S', time: 'Night', uhi: 'Strong', sel: 5, unit: 'districts', day: 1 };
+// No district is selected at first; the district details open when someone picks one.
+const INITIAL = { mode: 'direction', dir: 'S', time: 'Night', uhi: 'Strong', sel: null, unit: 'districts', day: 1 };
 
 export default function App() {
   const { data, error } = useData();
@@ -45,7 +46,7 @@ export default function App() {
         <h1 className="brand">Austin Rainfall Risk Mapper</h1>
       </header>
 
-      <div className="layout">
+      <div className={`layout${view.selected ? '' : ' no-detail'}`}>
         <ConditionPanel choices={choices} update={update} view={view} hasStorm={Boolean(data.storm)}
           districtShapes={data.districts} onLocate={onLocate} />
 
@@ -68,7 +69,7 @@ export default function App() {
           {view.calendar && <StormCalendar calendar={view.calendar} />}
         </main>
 
-        <DistrictPanel view={view} update={update} />
+        {view.selected && <DistrictPanel view={view} update={update} onClose={() => update({ sel: null })} />}
       </div>
     </div>
   );
