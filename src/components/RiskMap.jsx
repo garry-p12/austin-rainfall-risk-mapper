@@ -15,7 +15,7 @@ const BASEMAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/dark';
 const FALLBACK_STYLE = {
   version: 8,
   sources: {},
-  layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#121212' } }],
+  layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#14120E' } }],
 };
 
 const loadBasemapStyle = () =>
@@ -75,13 +75,13 @@ export default function RiskMap({ data, view, choices, userPoint, onSelect }) {
         map.addLayer({ id: 'watershed-fill', type: 'fill', source: 'watersheds', layout: { visibility: 'none' },
           paint: { 'fill-color': rcStepExpression('rc_S'), 'fill-opacity': 0.85 } });
         map.addLayer({ id: 'watershed-line', type: 'line', source: 'watersheds', layout: { visibility: 'none' },
-          paint: { 'line-color': '#121212', 'line-width': 0.8 } });
+          paint: { 'line-color': '#14120E', 'line-width': 0.8 } });
         map.addLayer({ id: 'city-fill', type: 'fill', source: 'city', layout: { visibility: 'none' },
           paint: { 'fill-color': '#4A5568', 'fill-opacity': 0.82 } });
         map.addLayer({ id: 'district-fill', type: 'fill', source: 'districts',
           paint: { 'fill-color': ['coalesce', ['feature-state', 'fill'], '#4A5568'], 'fill-opacity': 0.82 } });
         map.addLayer({ id: 'district-line', type: 'line', source: 'districts',
-          paint: { 'line-color': '#121212', 'line-width': 1.2 } });
+          paint: { 'line-color': '#14120E', 'line-width': 1.2 } });
         map.addLayer({ id: 'district-selected', type: 'line', source: 'districts',
           filter: ['==', ['get', 'district'], -1], paint: { 'line-color': '#FFFFFF', 'line-width': 3 } });
 
@@ -160,7 +160,7 @@ export default function RiskMap({ data, view, choices, userPoint, onSelect }) {
       if (city) map.setPaintProperty('city-fill', 'fill-color', view.city.cls.fill);
       map.setPaintProperty('district-fill', 'fill-opacity', unit === 'districts' ? 0.82 : 0);
       // Over watersheds, district lines go light so they stand apart from the dark watershed lines.
-      map.setPaintProperty('district-line', 'line-color', sheds ? 'rgba(255,255,255,0.6)' : unit === 'districts' ? '#121212' : 'rgba(18,18,18,0.9)');
+      map.setPaintProperty('district-line', 'line-color', sheds ? 'rgba(255,255,255,0.6)' : unit === 'districts' ? '#14120E' : 'rgba(20,18,14,0.9)');
       map.setFilter('district-selected', ['==', ['get', 'district'], choices.sel ?? -1]);
       if (!grid && !sheds) cellPopup.current?.remove();
 
@@ -186,7 +186,7 @@ export default function RiskMap({ data, view, choices, userPoint, onSelect }) {
       {view.isDir && (
         <div className="storm-badge" aria-hidden="true">
           <svg width="26" height="26" viewBox="0 0 24 24" style={{ transform: `rotate(${TRAVEL_ANGLE[choices.dir]}deg)`, transition: prefersReducedMotion() ? 'none' : 'transform 250ms ease' }}>
-            <path d="M12 3 L12 21 M12 3 L6 9 M12 3 L18 9" fill="none" stroke="#90CAF9" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M12 3 L12 21 M12 3 L6 9 M12 3 L18 9" fill="none" stroke="#2BB3CC" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           <span>Storm moving<br /><strong>from the {DIR_NAMES[choices.dir]}</strong></span>
         </div>
