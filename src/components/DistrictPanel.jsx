@@ -4,7 +4,7 @@ export default function DistrictPanel({ view, update, onClose }) {
   const { selected, ranked, districts, barMax: max } = view;
   return (
     <aside className="panel side" aria-label="Selected district">
-      <button type="button" className="toggle panel-close" onClick={onClose} aria-label="Close district details">Close ✕</button>
+      <button type="button" className="toggle panel-close" onClick={onClose} aria-label="Close district details">✕</button>
       {view.city && (
         <section className="city-summary" aria-label="Whole city">
           <p className="eyebrow">Whole city</p>

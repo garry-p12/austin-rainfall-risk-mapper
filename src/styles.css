@@ -134,4 +134,4 @@ legend { font-size: 14px; font-weight: 500; margin-bottom: 10px; }
 /* Whole-city summary above the selected district. */
 .city-summary { display: flex; flex-direction: column; gap: 8px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
 .city-summary .chip { margin-top: 0; }
-.panel-close { align-self: flex-end; min-height: 44px; padding: 4px 12px; font-size: 13px; margin-bottom: -8px; }
+.panel-close { align-self: flex-end; width: 44px; min-height: 44px; padding: 0; font-size: 18px; line-height: 1; margin-bottom: -8px; }
