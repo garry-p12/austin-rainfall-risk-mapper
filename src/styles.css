@@ -25,11 +25,6 @@ button { font: inherit; color: inherit; }
 
 .topbar { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 20px; padding: 14px 24px; background: var(--panel); border-bottom: 1px solid var(--line); }
 .brand { margin: 0; font-size: 18px; font-weight: 700; }
-.tagline { margin: 0; font-size: 14px; color: var(--muted); }
-.copy-link { margin-left: auto; display: flex; align-items: center; gap: 10px; align-self: center; }
-.copy-link .toggle { flex-direction: row; padding: 6px 14px; font-size: 13px; }
-.copy-status { font-size: 13px; color: var(--accent); min-width: 0; }
-.copy-status:empty { display: none; }
 
 .layout { display: grid; grid-template-columns: 280px minmax(0, 1fr) 340px; gap: 16px; padding: 16px; align-items: start; }
 @media (max-width: 1180px) { .layout { grid-template-columns: 260px minmax(0, 1fr); } .layout > aside:last-child { grid-column: 1 / -1; } }

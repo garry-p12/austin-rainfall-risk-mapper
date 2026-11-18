@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useData } from './lib/useData.js';
 import { buildView } from './lib/view.js';
 import { choicesFromSearch, searchFromChoices } from './lib/url.js';
-import CopyLink from './components/CopyLink.jsx';
 import ConditionPanel from './components/ConditionPanel.jsx';
 import RiskMap from './components/RiskMap.jsx';
 import Legend from './components/Legend.jsx';
@@ -44,8 +43,6 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <h1 className="brand">Austin Rainfall Risk Mapper</h1>
-        <p className="tagline">{view.isStorm ? 'Risk for an upcoming storm, measured against history' : 'Where heavy rain hits hardest, 2000–2024'}</p>
-        <CopyLink />
       </header>
 
       <div className="layout">
