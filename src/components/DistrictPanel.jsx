@@ -1,11 +1,9 @@
-import LocateMe from './LocateMe.jsx';
 
 // Right-hand panel: the selected district in words, across all conditions, and the ranking.
-export default function DistrictPanel({ view, update, districtShapes, onLocate }) {
+export default function DistrictPanel({ view, update }) {
   const { selected, ranked, districts, barMax: max } = view;
   return (
     <aside className="panel side" aria-label="Selected district">
-      <LocateMe districts={districtShapes} onLocate={onLocate} />
       {view.city && (
         <section className="city-summary" aria-label="Whole city">
           <p className="eyebrow">Whole city</p>

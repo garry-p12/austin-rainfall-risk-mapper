@@ -1,4 +1,5 @@
 import { COMPASS, DIR_NAMES } from '../lib/format.js';
+import LocateMe from './LocateMe.jsx';
 
 // A row of toggle buttons; aria-pressed tells screen readers which one is on.
 function Toggle({ options, value, onChange, columns }) {
@@ -14,7 +15,7 @@ function Toggle({ options, value, onChange, columns }) {
   );
 }
 
-export default function ConditionPanel({ choices, update, view, hasStorm }) {
+export default function ConditionPanel({ choices, update, view, hasStorm, districtShapes, onLocate }) {
   const isDir = choices.mode === 'direction';
   const modes = [{ value: 'direction', label: 'Storm direction' }, { value: 'uhi', label: 'Time of day and urban heat' }];
   // City, districts, watersheds, grid: whichever this view offers.
@@ -27,6 +28,7 @@ export default function ConditionPanel({ choices, update, view, hasStorm }) {
   if (hasStorm) modes.push({ value: 'storm', label: 'Upcoming storm risk', sub: 'Example storm' });
   return (
     <aside className="panel side" aria-label="Storm conditions">
+      <LocateMe districts={districtShapes} onLocate={onLocate} />
       <fieldset>
         <legend>{hasStorm ? 'Show' : 'Group storms by'}</legend>
         <Toggle columns={1} value={choices.mode} onChange={(mode) => update({ mode })} options={modes} />

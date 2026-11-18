@@ -46,7 +46,8 @@ export default function App() {
       </header>
 
       <div className="layout">
-        <ConditionPanel choices={choices} update={update} view={view} hasStorm={Boolean(data.storm)} />
+        <ConditionPanel choices={choices} update={update} view={view} hasStorm={Boolean(data.storm)}
+          districtShapes={data.districts} onLocate={onLocate} />
 
         <main className="panel center" aria-labelledby="view-title">
           <h2 id="view-title" className="view-title">{view.title}</h2>
@@ -67,7 +68,7 @@ export default function App() {
           {view.calendar && <StormCalendar calendar={view.calendar} />}
         </main>
 
-        <DistrictPanel view={view} update={update} districtShapes={data.districts} onLocate={onLocate} />
+        <DistrictPanel view={view} update={update} />
       </div>
     </div>
   );
