@@ -71,17 +71,20 @@ export default function RiskMap({ data, view, choices, userPoint, onSelect }) {
         map.addSource('watersheds', { type: 'geojson', data: data.watersheds ?? { type: 'FeatureCollection', features: [] } });
 
         map.addLayer({ id: 'grid-fill', type: 'fill', source: 'grid', layout: { visibility: 'none' },
-          paint: { 'fill-color': rcStepExpression('rc_S'), 'fill-opacity': 0.85, 'fill-antialias': false } });
+          paint: { 'fill-color': rcStepExpression('rc_S'), 'fill-opacity': 0.92, 'fill-antialias': false } });
         map.addLayer({ id: 'watershed-fill', type: 'fill', source: 'watersheds', layout: { visibility: 'none' },
-          paint: { 'fill-color': rcStepExpression('rc_S'), 'fill-opacity': 0.85 } });
+          paint: { 'fill-color': rcStepExpression('rc_S'), 'fill-opacity': 0.92 } });
         map.addLayer({ id: 'watershed-line', type: 'line', source: 'watersheds', layout: { visibility: 'none' },
           paint: { 'line-color': '#14120E', 'line-width': 0.8 } });
         map.addLayer({ id: 'city-fill', type: 'fill', source: 'city', layout: { visibility: 'none' },
-          paint: { 'fill-color': '#4A5568', 'fill-opacity': 0.82 } });
+          paint: { 'fill-color': '#6B675F', 'fill-opacity': 0.92 } });
         map.addLayer({ id: 'district-fill', type: 'fill', source: 'districts',
-          paint: { 'fill-color': ['coalesce', ['feature-state', 'fill'], '#4A5568'], 'fill-opacity': 0.82 } });
+          paint: { 'fill-color': ['coalesce', ['feature-state', 'fill'], '#6B675F'], 'fill-opacity': 0.92 } });
         map.addLayer({ id: 'district-line', type: 'line', source: 'districts',
           paint: { 'line-color': '#14120E', 'line-width': 1.2 } });
+        // Selected district: a white line on a dark casing, so it shows on light and dark fills alike.
+        map.addLayer({ id: 'district-selected-casing', type: 'line', source: 'districts',
+          filter: ['==', ['get', 'district'], -1], paint: { 'line-color': '#14120E', 'line-width': 6 } });
         map.addLayer({ id: 'district-selected', type: 'line', source: 'districts',
           filter: ['==', ['get', 'district'], -1], paint: { 'line-color': '#FFFFFF', 'line-width': 3 } });
 
@@ -158,10 +161,10 @@ export default function RiskMap({ data, view, choices, userPoint, onSelect }) {
       if (grid) map.setPaintProperty('grid-fill', 'fill-color', rcStepExpression(`rc_${choices.dir}`));
       if (sheds) map.setPaintProperty('watershed-fill', 'fill-color', rcStepExpression(`rc_${choices.dir}`));
       if (city) map.setPaintProperty('city-fill', 'fill-color', view.city.cls.fill);
-      map.setPaintProperty('district-fill', 'fill-opacity', unit === 'districts' ? 0.82 : 0);
+      map.setPaintProperty('district-fill', 'fill-opacity', unit === 'districts' ? 0.92 : 0);
       // Over watersheds, district lines go light so they stand apart from the dark watershed lines.
       map.setPaintProperty('district-line', 'line-color', sheds ? 'rgba(255,255,255,0.6)' : unit === 'districts' ? '#14120E' : 'rgba(20,18,14,0.9)');
-      map.setFilter('district-selected', ['==', ['get', 'district'], choices.sel ?? -1]);
+      for (const id of ['district-selected-casing', 'district-selected']) map.setFilter(id, ['==', ['get', 'district'], choices.sel ?? -1]);
       if (!grid && !sheds) cellPopup.current?.remove();
 
       // "Find my district" marker. Not a button: it only shows where the visitor is.
